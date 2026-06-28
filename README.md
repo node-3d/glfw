@@ -2,13 +2,13 @@
 
 This is a part of [Node3D](https://github.com/node-3d) project.
 
-[![NPM](https://badge.fury.io/js/glfw-raub.svg)](https://badge.fury.io/js/glfw-raub)
-[![ESLint](https://github.com/node-3d/glfw-raub/actions/workflows/eslint.yml/badge.svg)](https://github.com/node-3d/glfw-raub/actions/workflows/eslint.yml)
-[![Test](https://github.com/node-3d/glfw-raub/actions/workflows/test.yml/badge.svg)](https://github.com/node-3d/glfw-raub/actions/workflows/test.yml)
-[![Cpplint](https://github.com/node-3d/glfw-raub/actions/workflows/cpplint.yml/badge.svg)](https://github.com/node-3d/glfw-raub/actions/workflows/cpplint.yml)
+[![NPM](https://badge.fury.io/js/%40node-3d%2Fglfw.svg)](https://badge.fury.io/js/@node-3d/glfw)
+[![Lint](https://github.com/node-3d/glfw/actions/workflows/lint.yml/badge.svg)](https://github.com/node-3d/glfw/actions/workflows/lint.yml)
+[![Test](https://github.com/node-3d/glfw/actions/workflows/test.yml/badge.svg)](https://github.com/node-3d/glfw/actions/workflows/test.yml)
+[![Cpplint](https://github.com/node-3d/glfw/actions/workflows/cpplint.yml/badge.svg)](https://github.com/node-3d/glfw/actions/workflows/cpplint.yml)
 
 ```console
-npm i -s glfw-raub
+npm install @node-3d/glfw
 ```
 
 **Node.js** addon with **GLFW3** bindings.
@@ -22,9 +22,11 @@ npm i -s glfw-raub
 * Has `Window` class, simplifying low-level interactions.
 * Has `Document` class, capable of tricking other libs, as if we are in a browser.
 
-```js
-import glfw from 'glfw-raub';
-const { Window } = glfw;
+The package has named exports only. Use `glfw` for the raw native bindings,
+and import `Window` or `Document` directly for the higher-level classes.
+
+```ts
+import { glfw, Window } from '@node-3d/glfw';
 
 const wnd = new Window({ title: 'GLFW Test', vsync: true });
 
@@ -40,7 +42,7 @@ wnd.loop(() => {
 
 > Note: this **addon uses N-API**, and therefore is ABI-compatible across different
 Node.js versions. Addon binaries are precompiled and **there is no compilation**
-step during the `npm i` command.
+step during the `npm install` command.
 
 
 ## GLFW
@@ -48,7 +50,7 @@ step during the `npm i` command.
 This is a low-level interface, where most of the stuff is directly reflecting
 GLFW API. GLFW **does NOT EXPOSE** OpenGL commands, it only [controls the window-related
 setup and resources](http://www.glfw.org/docs/latest/group__window.html).
-To access OpenGL/WebGL API you can use [webgl-raub](https://github.com/node-3d/webgl-raub)
+To access OpenGL/WebGL API you can use [@node-3d/webgl](https://github.com/node-3d/webgl)
 or any other similar addon.
 
 Aside from several additional features, this addon directly exposes the GLFW API to JS. E.g.:
@@ -66,6 +68,8 @@ Nothing is added between you and GLFW, unless necessary or explicitly mentioned.
     `glfw.*`. E.g. `glfwPollEvents` -> `glfw.pollEvents`.
 * All `GLFW_*` constants are accessible as
     `glfw.*`. E.g. `GLFW_TRUE` -> `glfw.TRUE`.
+* Higher-level helpers are separate named exports.
+    E.g. `import { Window, Document } from '@node-3d/glfw'`.
 * Method `glfw.createWindow` takes some additional arguments. This is mostly related to
     JS events being generated from GLFW callbacks,
     and here's where you provide an Emitter object.
@@ -73,17 +77,19 @@ Nothing is added between you and GLFW, unless necessary or explicitly mentioned.
     arguments in specific methods. Such as, `glfw.createWindow` returns a number
     (pointer), and then you provide it back to e.g. `glfw.setWindowTitle`.
 
-See [this example](/examples/vulkan.mjs) for raw GLFW calls.
+See [this example](/examples/vulkan.ts) for raw GLFW calls.
 
-See [TS declarations](/index.d.ts) for more details.
+The public entrypoint exports `glfw`, `Window`, `Document`, and event/window option types.
+The lower-level raw API is on `glfw`; the higher-level classes are imported directly.
 
 ----------
 
 
 ### class Window
 
-```js
-const { Window } = glfw;
+```ts
+import { Window } from '@node-3d/glfw';
+
 const wnd = new Window({ title: 'GLFW Test', vsync: true });
 ```
 
@@ -94,14 +100,15 @@ The first window creates an additional invisible root-window for context sharing
 (so that you can also close any window and still keep the root context).
 The platform context (pointers/handles) for sharing may be obtained when necessary.
 
-See [TS declarations](/index.d.ts) for more details.
+See [`ts/window.ts`](/ts/window.ts) for more details.
 
 ----------
 
 ### class Document
 
-```js
-const { Document } = glfw;
+```ts
+import { Document } from '@node-3d/glfw';
+
 const doc = new Document({ title: 'GLFW Test', vsync: true });
 ```
 
@@ -111,7 +118,7 @@ There are some tricks to provide WebGL libraries with necessary environment.
 Document is specifically designed for compatibility with [three.js](https://threejs.org/).
 Other web libraries may work too, but may require additional tweaking.
 
-See [TS declarations](/index.d.ts) for more details.
+See [`ts/document.ts`](/ts/document.ts) for more details.
 
 ----------
 
@@ -120,9 +127,9 @@ See [TS declarations](/index.d.ts) for more details.
 * `glfw.hideConsole(): void` - tries to hide the console window on Windows.
 * `glfw.showConsole(): void` - shows the console window if it has been hidden.
 * `glfw.drawWindow(w: number, cb: (dateNow: number) => void): void` - this is a shortcut
-    to call `pollEvents`, then `cb`, and then `swapBuffers`, where you only supply `cb`
-    and C++ side does the rest.
-* `glfw.platformDevice(w: number): number` - returns the window HDC on Windows,
+    to call `pollEvents`, then `cb`, and then `swapBuffers`. `Window#drawWindow`
+    wraps this call and supplies the window handle for you.
+* `glfw.platformDevice(): number` - returns the native display or device handle,
     or whatever is similar on other systems.
 * `glfw.platformWindow(w: number): number` - returns the window HWND on Windows,
     or whatever is similar on other systems.

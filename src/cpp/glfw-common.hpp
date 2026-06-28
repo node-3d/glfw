@@ -23,7 +23,12 @@
 
 
 #define THIS_WINDOW                                                           \
-	GLFWwindow *window = reinterpret_cast<GLFWwindow*>(info[0].As<Napi::Number>().Int64Value());
+	REQ_EXT_ARG(0, __window_handle);                                          \
+	GLFWwindow *window = static_cast<GLFWwindow*>(__window_handle);            \
+	if (!window) {                                                            \
+		JS_THROW("Window pointer must not be null.");                         \
+		RET_UNDEFINED;                                                        \
+	}
 
 
 #define THIS_STATE                                                            \
@@ -44,6 +49,7 @@ inline Napi::Number NewInt64(napi_env env, int64_t val) {
 }
 
 #define RET_PTR(VAL) return NewInt64(env, reinterpret_cast<int64_t>(VAL))
+#define RET_WINDOW(VAL) RET_EXT(VAL)
 	
 namespace glfw {
 	Napi::Value undefined;

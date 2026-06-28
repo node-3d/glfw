@@ -1,5 +1,4 @@
-import glfw from '../index.js';
-const { Window } = glfw;
+import { glfw, Window } from '@node-3d/glfw';
 
 
 const windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
@@ -12,9 +11,10 @@ const windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
 });
 
 // testing events
-windows.forEach(({ w }, i) => {
+for (let i = 0; i < windows.length; i++) {
+	const { w } = windows[i];
 	w.on('mousemove', (e) => console.log(`[#${i + 1} mousemove] ${e.x}, ${e.y}`));
-});
+}
 
 
 let prevTime = Date.now();
@@ -23,8 +23,8 @@ let events = 0;
 
 
 const loopFunc = () => {
-	for (let i = 0; i < windows.length; i++) {
-		const { w, render } = windows[i];
+	for (const window of windows) {
+		const { w, render } = window;
 		if (w.shouldClose || w.getKey(glfw.KEY_ESCAPE)) {
 			process.exit(0);
 			return;

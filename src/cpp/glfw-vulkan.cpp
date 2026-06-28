@@ -190,6 +190,10 @@ DBG_EXPORT JS_METHOD(vulkanCreateDevice) { NAPI_ENV; THIS_VULKAN;
 			selected_physical_device = physical_devices[i];
 		}
 	}
+	if (selected_physical_device == VK_NULL_HANDLE) {
+		std::cerr << "Error: Could not find a suitable Vulkan physical device." << std::endl;
+		RET_NULL;
+	}
 	
 	std::vector<float> queue_priorities = { 1.0f };
 	

@@ -28,7 +28,7 @@ DBG_EXPORT JS_METHOD(getFramebufferSize) { NAPI_ENV; THIS_WINDOW;
 }
 
 
-DBG_EXPORT JS_METHOD(swapBuffers) { THIS_WINDOW;
+DBG_EXPORT JS_METHOD(swapBuffers) { NAPI_ENV; THIS_WINDOW;
 	glfwSwapBuffers(window);
 	RET_GLFW_VOID;
 }

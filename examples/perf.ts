@@ -1,5 +1,4 @@
-import glfw from '../index.js';
-const { Window } = glfw;
+import { glfw, Window } from '@node-3d/glfw';
 
 
 const w1 = new Window({ title: 'GLFW Events', vsync: false });

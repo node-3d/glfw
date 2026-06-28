@@ -1,11 +1,9 @@
-'use strict';
+import { glfw } from './core.ts';
 
-const glfw = require('../core');
+export const emptyFunction = (): void => { /* nop */ };
 
-
-const emptyFunction = () => undefined;
-
-const keyNames = {
+/** Human-readable names for keyboard keys. */
+export const keyNames = {
 	[glfw.KEY_BACKSPACE]     : 'Backspace',
 	[glfw.KEY_CAPS_LOCK]     : 'CapsLock',
 	[glfw.KEY_DELETE]        : 'Delete',
@@ -67,7 +65,9 @@ const keyNames = {
 	[glfw.KEY_TAB]           : 'Tab',
 };
 
-const codeNames = Object.assign({}, keyNames, {
+/** Human-readable names for keyboard key codes, including `keyNames`. */
+export const codeNames = {
+	...keyNames,
 	[glfw.KEY_EQUAL]         : 'Equal',
 	[glfw.KEY_COMMA]         : 'Comma',
 	[glfw.KEY_MINUS]         : 'Minus',
@@ -117,10 +117,10 @@ const codeNames = Object.assign({}, keyNames, {
 	[glfw.KEY_KP_EQUAL]      : 'Equal',
 	[glfw.KEY_KP_MULTIPLY]   : 'NumpadMultiply',
 	[glfw.KEY_KP_SUBTRACT]   : 'NumpadSubtract',
-});
+};
 
-
-const extraCodes = {
+/** Additional keyboard event key-code conversions from GLFW codes to web codes. */
+export const extraCodes = {
 	[glfw.KEY_APOSTROPHE]    : 222,
 	[glfw.KEY_BACKSLASH]     : 220,
 	[glfw.KEY_BACKSPACE]     : 8,
@@ -205,17 +205,6 @@ const extraCodes = {
 	[glfw.KEY_UP]            : 38,
 };
 
+export const ESC_KEY = 27;
 
-const ESC_KEY = 27;
-
-const F_KEY = 70;
-
-
-module.exports = {
-	emptyFunction,
-	keyNames,
-	codeNames,
-	extraCodes,
-	ESC_KEY,
-	F_KEY,
-};
+export const F_KEY = 70;

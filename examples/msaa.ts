@@ -1,5 +1,4 @@
-import glfw from '../index.js';
-const { Window } = glfw;
+import { glfw, Window } from '@node-3d/glfw';
 
 
 // Default MSAA is 0

@@ -123,7 +123,7 @@ DBG_EXPORT JS_METHOD(createWindow) { NAPI_ENV;
 	
 	if (hasMonitor) {
 		monitors = glfwGetMonitors(&monitorCount);
-		if (monitor_idx < monitorCount) {
+		if (monitor_idx >= 0 && monitor_idx < monitorCount) {
 			monitor = monitors[monitor_idx];
 		} else {
 			std::cerr << "Error. Ignoring invalid monitor index: " << monitor_idx << "." << std::endl;
@@ -190,11 +190,11 @@ DBG_EXPORT JS_METHOD(createWindow) { NAPI_ENV;
 	glfwSetCursorEnterCallback(window, cursorEnterCB);
 	glfwSetScrollCallback(window, scrollCB);
 	
-	RET_PTR(window);
+	RET_WINDOW(window);
 }
 
 
-DBG_EXPORT JS_METHOD(destroyWindow) { THIS_WINDOW; THIS_STATE;
+DBG_EXPORT JS_METHOD(destroyWindow) { NAPI_ENV; THIS_WINDOW; THIS_STATE;
 	glfwDestroyWindow(window);
 	if (state) {
 		state->window = nullptr;
@@ -225,24 +225,37 @@ DBG_EXPORT JS_METHOD(setWindowIcon) { NAPI_ENV; THIS_WINDOW;
 	image.width = icon.Get("width").ToNumber().Int32Value();
 	image.height = icon.Get("height").ToNumber().Int32Value();
 	
-	uint8_t *src = reinterpret_cast<unsigned char*>(getData(env, icon));
+	int32_t numPixels = 0;
+	uint8_t *src = getData<uint8_t>(env, icon, &numPixels);
+	const uint64_t requiredBytes = (
+		static_cast<uint64_t>(image.width) * static_cast<uint64_t>(image.height) * 4
+	);
+	
+	if (
+		image.width <= 0 ||
+		image.height <= 0 ||
+		src == nullptr ||
+		static_cast<uint64_t>(numPixels) < requiredBytes
+	) {
+		JS_THROW("Icon data must contain width * height * 4 bytes.");
+		RET_UNDEFINED;
+	}
 	
 	if (noflip == false) {
-		uint8_t *dest = new uint8_t[image.width * image.height * 4];
+		std::vector<uint8_t> dest(static_cast<size_t>(requiredBytes));
 		int32_t lastY = image.height - 1;
 		for (int32_t y = 0; y < image.height; y++) {
 			for (int32_t x = 0; x < image.width; x++) {
 				int32_t iForward = (y * image.width + x) << 2;
 				int32_t iBackward = ((lastY - y) * image.width + x) << 2;
-				dest[iForward + 0] = src[iBackward + 0];
-				dest[iForward + 1] = src[iBackward + 1];
-				dest[iForward + 2] = src[iBackward + 2];
-				dest[iForward + 3] = src[iBackward + 3];
+				dest[static_cast<size_t>(iForward + 0)] = src[iBackward + 0];
+				dest[static_cast<size_t>(iForward + 1)] = src[iBackward + 1];
+				dest[static_cast<size_t>(iForward + 2)] = src[iBackward + 2];
+				dest[static_cast<size_t>(iForward + 3)] = src[iBackward + 3];
 			}
 		}
-		image.pixels = dest;
+		image.pixels = dest.data();
 		glfwSetWindowIcon(window, 1, &image);
-		delete [] dest;
 	} else {
 		image.pixels = src;
 		glfwSetWindowIcon(window, 1, &image);
@@ -356,19 +369,19 @@ DBG_EXPORT JS_METHOD(setWindowOpacity) { NAPI_ENV; THIS_WINDOW;
 }
 
 
-DBG_EXPORT JS_METHOD(maximizeWindow) { THIS_WINDOW;
+DBG_EXPORT JS_METHOD(maximizeWindow) { NAPI_ENV; THIS_WINDOW;
 	glfwMaximizeWindow(window);
 	RET_GLFW_VOID;
 }
 
 
-DBG_EXPORT JS_METHOD(focusWindow) { THIS_WINDOW;
+DBG_EXPORT JS_METHOD(focusWindow) { NAPI_ENV; THIS_WINDOW;
 	glfwFocusWindow(window);
 	RET_GLFW_VOID;
 }
 
 
-DBG_EXPORT JS_METHOD(requestWindowAttention) { THIS_WINDOW;
+DBG_EXPORT JS_METHOD(requestWindowAttention) { NAPI_ENV; THIS_WINDOW;
 	glfwRequestWindowAttention(window);
 	RET_GLFW_VOID;
 }
@@ -383,29 +396,29 @@ DBG_EXPORT JS_METHOD(getWindowMonitor) { NAPI_ENV; THIS_WINDOW;
 	
 	GLFWmonitor *primary = glfwGetPrimaryMonitor();
 	
-	RET_VALUE(describeMonitor(env, monitor, primary ? true : monitor == primary));
+	RET_VALUE(describeMonitor(env, monitor, monitor == primary));
 }
 
 
-DBG_EXPORT JS_METHOD(iconifyWindow) { THIS_WINDOW;
+DBG_EXPORT JS_METHOD(iconifyWindow) { NAPI_ENV; THIS_WINDOW;
 	glfwIconifyWindow(window);
 	RET_GLFW_VOID;
 }
 
 
-DBG_EXPORT JS_METHOD(restoreWindow) { THIS_WINDOW;
+DBG_EXPORT JS_METHOD(restoreWindow) { NAPI_ENV; THIS_WINDOW;
 	glfwRestoreWindow(window);
 	RET_GLFW_VOID;
 }
 
 
-DBG_EXPORT JS_METHOD(hideWindow) { THIS_WINDOW;
+DBG_EXPORT JS_METHOD(hideWindow) { NAPI_ENV; THIS_WINDOW;
 	glfwHideWindow(window);
 	RET_GLFW_VOID;
 }
 
 
-DBG_EXPORT JS_METHOD(showWindow) { THIS_WINDOW;
+DBG_EXPORT JS_METHOD(showWindow) { NAPI_ENV; THIS_WINDOW;
 	glfwShowWindow(window);
 	RET_GLFW_VOID;
 }

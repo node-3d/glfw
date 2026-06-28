@@ -40,7 +40,13 @@ DBG_EXPORT JS_METHOD(rawMouseMotionSupported) { NAPI_ENV;
 DBG_EXPORT JS_METHOD(getKeyName) { NAPI_ENV;
 	REQ_INT32_ARG(0, key);
 	REQ_INT32_ARG(1, scancode);
-	RET_STR(glfwGetKeyName(key, scancode));
+	
+	const char *name = glfwGetKeyName(key, scancode);
+	if (!name) {
+		RET_NULL;
+	}
+	
+	RET_STR(name);
 }
 
 

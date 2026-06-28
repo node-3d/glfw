@@ -1,7 +1,7 @@
-import glfw from '../index.js';
-const { Window } = glfw;
+import { glfw, Window } from '@node-3d/glfw';
+import type { TWindowMode } from '@node-3d/glfw';
 
-let mode = 'windowed';
+let mode: TWindowMode = 'windowed';
 
 if (process.argv.includes('--fullscreen')) {
 	mode = 'fullscreen';
@@ -23,8 +23,6 @@ w1.on('keydown', (e) => {
 		w1.mode = 'fullscreen';
 	} else if (e.keyCode === glfw.KEY_F && e.ctrlKey) {
 		w1.mode = 'borderless';
-	} else {
-		return;
 	}
 });
 

@@ -21,6 +21,7 @@ namespace glfw {
 		pendingKey(0),
 		pendingScan(0),
 		pendingAction(0),
+		pendingMods(0),
 		window(_window),
 		context(_emitter.Env(), "GLFWEvent") {
 			emitter.Reset(_emitter, 1);

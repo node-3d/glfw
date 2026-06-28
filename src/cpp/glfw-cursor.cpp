@@ -38,26 +38,39 @@ DBG_EXPORT JS_METHOD(createCursor) { NAPI_ENV;
 	image.width = icon.Get("width").ToNumber().Int32Value();
 	image.height = icon.Get("height").ToNumber().Int32Value();
 	
-	uint8_t *src = reinterpret_cast<unsigned char*>(getData(env, icon));
+	int32_t numPixels = 0;
+	uint8_t *src = getData<uint8_t>(env, icon, &numPixels);
+	const uint64_t requiredBytes = (
+		static_cast<uint64_t>(image.width) * static_cast<uint64_t>(image.height) * 4
+	);
+	
+	if (
+		image.width <= 0 ||
+		image.height <= 0 ||
+		src == nullptr ||
+		static_cast<uint64_t>(numPixels) < requiredBytes
+	) {
+		JS_THROW("Cursor data must contain width * height * 4 bytes.");
+		RET_UNDEFINED;
+	}
 	
 	GLFWcursor *cursor = nullptr;
 	
 	if (!noflip) {
-		uint8_t *dest = new uint8_t[image.width * image.height * 4];
+		std::vector<uint8_t> dest(static_cast<size_t>(requiredBytes));
 		int32_t lastY = image.height - 1;
 		for (int32_t y = 0; y < image.height; y++) {
 			for (int32_t x = 0; x < image.width; x++) {
 				int32_t iForward = (y * image.width + x) << 2;
 				int32_t iBackward = ((lastY - y) * image.width + x) << 2;
-				dest[iForward + 0] = src[iBackward + 0];
-				dest[iForward + 1] = src[iBackward + 1];
-				dest[iForward + 2] = src[iBackward + 2];
-				dest[iForward + 3] = src[iBackward + 3];
+				dest[static_cast<size_t>(iForward + 0)] = src[iBackward + 0];
+				dest[static_cast<size_t>(iForward + 1)] = src[iBackward + 1];
+				dest[static_cast<size_t>(iForward + 2)] = src[iBackward + 2];
+				dest[static_cast<size_t>(iForward + 3)] = src[iBackward + 3];
 			}
 		}
-		image.pixels = dest;
+		image.pixels = dest.data();
 		cursor = glfwCreateCursor(&image, image.width / 2, image.height / 2);
-		delete [] dest;
 	} else {
 		image.pixels = src;
 		cursor = glfwCreateCursor(&image, image.width / 2, image.height / 2);
