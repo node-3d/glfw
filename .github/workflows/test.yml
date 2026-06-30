@@ -41,12 +41,12 @@ jobs:
         run: sudo apt-get install -y libwayland-dev libgles2-mesa-dev
 
       - name: Build Current Binary
-        run: npm run build
+        run: npm run build:rebuild
 
       - name: Run Unit Tests - Linux
         if: matrix.os == 'ubuntu-22.04' || matrix.os == 'ubuntu-22.04-arm'
-        run: xvfb-run --auto-servernum npm run test-ci
+        run: xvfb-run --auto-servernum npm run test:ci
 
       - name: Run Unit Tests - Mac
         if: matrix.os == 'macos-14'
-        run: npm run test-ci
+        run: npm run test:ci
