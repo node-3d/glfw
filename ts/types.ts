@@ -31,41 +31,46 @@ export type TVersion = Readonly<{
 export type TCbVoid = () => void;
 
 /** Browser-like rectangle. */
-export type TRect = TSize & TPos & Readonly<{
-	left: number;
-	top: number;
-	right: number;
-	bottom: number;
-}>;
+export type TRect = TSize &
+	TPos &
+	Readonly<{
+		left: number;
+		top: number;
+		right: number;
+		bottom: number;
+	}>;
 
 /** Image data for icons and cursors. */
-export type TImageData = TSize & Readonly<{
-	data?: Buffer | Uint8Array | Uint8ClampedArray;
-	buffer?: ArrayBuffer | SharedArrayBuffer;
-	noflip?: boolean;
-}>;
+export type TImageData = TSize &
+	Readonly<{
+		data?: Buffer | Uint8Array | Uint8ClampedArray;
+		buffer?: ArrayBuffer | SharedArrayBuffer;
+		noflip?: boolean;
+	}>;
 
-export type TMonitorMode = TSize & Readonly<{
-	/** Refresh rate. */
-	rate: number;
-}>;
+export type TMonitorMode = TSize &
+	Readonly<{
+		/** Refresh rate. */
+		rate: number;
+	}>;
 
-export type TMonitor = TMonitorMode & Readonly<{
-	/** Whether this monitor is primary. */
-	is_primary: boolean;
-	/** Screen name. */
-	name: string;
-	/** Global screen X position. */
-	pos_x: number;
-	/** Global screen Y position. */
-	pos_y: number;
-	/** Screen width in millimeters. */
-	width_mm: number;
-	/** Screen height in millimeters. */
-	height_mm: number;
-	/** Supported display modes. */
-	modes: readonly TMonitorMode[];
-}>;
+export type TMonitor = TMonitorMode &
+	Readonly<{
+		/** Whether this monitor is primary. */
+		is_primary: boolean;
+		/** Screen name. */
+		name: string;
+		/** Global screen X position. */
+		pos_x: number;
+		/** Global screen Y position. */
+		pos_y: number;
+		/** Screen width in millimeters. */
+		width_mm: number;
+		/** Screen height in millimeters. */
+		height_mm: number;
+		/** Supported display modes. */
+		modes: readonly TMonitorMode[];
+	}>;
 
 export type TNativeEmitter = Readonly<{
 	emit: (type: string, event: unknown) => void;
@@ -156,7 +161,7 @@ export type TPosEvent = TEvent & TPos;
 
 export type TSizeEvent = TEvent & TSize;
 
-export type TEventCb<T extends TEvent> = (event: T) => (undefined | boolean);
+export type TEventCb<T extends TEvent> = (event: T) => undefined | boolean;
 
 export type TCbField<T extends TEvent> = TEventCb<T> | readonly TEventCb<T>[];
 

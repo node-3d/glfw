@@ -7,13 +7,21 @@ export class FakeImage {
 		logger.error('Document.Image class not set.');
 		return '';
 	}
-	
+
 	public set src(_v: string) {
 		logger.error('Document.Image class not set.');
 	}
-	
-	public get complete(): boolean { return false; }
-	public on(): void { /* nop */ }
-	public onload(): void { /* nop */ }
-	public onerror(): void { /* nop */ }
+
+	public get complete(): boolean {
+		return false;
+	}
+	public on(): void {
+		/* nop */
+	}
+	public onload(): void {
+		/* nop */
+	}
+	public onerror(): void {
+		/* nop */
+	}
 }

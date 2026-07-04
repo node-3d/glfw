@@ -58,23 +58,23 @@ if (getPlatform() === 'linux') {
 			assert.ok(instance);
 			return instance;
 		};
-		
+
 		before(() => {
 			instance = new Window();
 		});
-		
+
 		after(() => {
 			instance?.destroy();
 		});
-		
+
 		it('can be created', () => {
 			assert.ok(instance instanceof Window);
 		});
-		
+
 		for (const prop of windowProperties) {
 			testProperty(getInstance, prop);
 		}
-		
+
 		for (const method of windowMethods) {
 			testMethod(getInstance, method);
 		}

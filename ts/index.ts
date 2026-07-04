@@ -1,6 +1,4 @@
-export {
-	keyNames, codeNames, extraCodes,
-} from './constants.ts';
+export { keyNames, codeNames, extraCodes } from './constants.ts';
 export { glfw } from './core.ts';
 export { Window } from './window.ts';
 export { Document } from './document.ts';

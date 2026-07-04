@@ -1,3 +1,4 @@
+// oxlint-disable max-params
 import { createRequire } from 'node:module';
 import { getBin } from '@node-3d/addon-tools';
 import '@node-3d/segfault';
@@ -358,121 +359,121 @@ type TNativeMethods = {
 	 * Windows only. Hides the console window if this process owns it. This is
 	 * safe to call on all platforms, but ignored unless the platform is Windows.
 	 */
-	hideConsole(): void;
+	hideConsole: () => void;
 	/**
 	 * Show the terminal window.
 	 *
 	 * Windows only. Shows the console window if it was previously hidden with
 	 * `glfw.hideConsole()`.
 	 */
-	showConsole(): void;
-	init(): boolean;
-	initHint(hint: number, value: number): void;
-	terminate(): void;
-	getVersion(): TVersion;
-	getVersionString(): string;
-	getError(): string | null;
-	getTime(): number;
-	setTime(time: number): void;
-	getMonitors(): readonly TMonitor[];
-	getPrimaryMonitor(): TMonitor | null;
-	windowHint(hint: number, value: number): void;
-	windowHintString(hint: number, value: string): void;
-	defaultWindowHints(): void;
-	joystickPresent(joy: number): boolean;
-	getJoystickAxes(joy: number): string;
-	getJoystickButtons(joy: number): string;
-	getJoystickName(joy: number): string | null;
+	showConsole: () => void;
+	init: () => boolean;
+	initHint: (hint: number, value: number) => void;
+	terminate: () => void;
+	getVersion: () => TVersion;
+	getVersionString: () => string;
+	getError: () => string | null;
+	getTime: () => number;
+	setTime: (time: number) => void;
+	getMonitors: () => readonly TMonitor[];
+	getPrimaryMonitor: () => TMonitor | null;
+	windowHint: (hint: number, value: number) => void;
+	windowHintString: (hint: number, value: string) => void;
+	defaultWindowHints: () => void;
+	joystickPresent: (joy: number) => boolean;
+	getJoystickAxes: (joy: number) => string;
+	getJoystickButtons: (joy: number) => string;
+	getJoystickName: (joy: number) => string | null;
 	/**
 	 * Create a GLFW window.
 	 *
 	 * This differs from the GLFW C signature due to JS specifics. The `emitter`
 	 * object must have a bound `emit()` method used to transmit GLFW events.
 	 */
-	createWindow(
+	createWindow: (
 		width: number,
 		height: number,
 		emitter: TNativeEmitter,
 		title?: string,
 		monitorIndex?: number,
 		isNoApi?: boolean,
-	): TWindowHandle;
-	destroyWindow(window: TWindowHandle): void;
-	setWindowTitle(window: TWindowHandle, title: string): void;
-	setWindowIcon(window: TWindowHandle, icon: TImageData): void;
-	getWindowSize(window: TWindowHandle): TSize;
-	getWindowFrameSize(window: TWindowHandle): TFrameSize;
-	getWindowContentScale(window: TWindowHandle): TContentScale;
-	setWindowSize(window: TWindowHandle, width: number, height: number): void;
-	setWindowSizeLimits(
+	) => TWindowHandle;
+	destroyWindow: (window: TWindowHandle) => void;
+	setWindowTitle: (window: TWindowHandle, title: string) => void;
+	setWindowIcon: (window: TWindowHandle, icon: TImageData) => void;
+	getWindowSize: (window: TWindowHandle) => TSize;
+	getWindowFrameSize: (window: TWindowHandle) => TFrameSize;
+	getWindowContentScale: (window: TWindowHandle) => TContentScale;
+	setWindowSize: (window: TWindowHandle, width: number, height: number) => void;
+	setWindowSizeLimits: (
 		window: TWindowHandle,
 		minWidth: number,
 		minHeight: number,
 		maxWidth: number,
 		maxHeight: number,
-	): void;
-	setWindowAspectRatio(window: TWindowHandle, numerator?: number, denominator?: number): void;
-	setWindowPos(window: TWindowHandle, x: number, y: number): void;
-	getWindowPos(window: TWindowHandle): TPos;
-	getWindowOpacity(window: TWindowHandle): number;
-	setWindowOpacity(window: TWindowHandle, opacity: number): void;
-	maximizeWindow(window: TWindowHandle): void;
-	focusWindow(window: TWindowHandle): void;
-	requestWindowAttention(window: TWindowHandle): void;
-	getWindowMonitor(window: TWindowHandle): TMonitor | null;
-	getFramebufferSize(window: TWindowHandle): TSize;
-	iconifyWindow(window: TWindowHandle): void;
-	restoreWindow(window: TWindowHandle): void;
-	hideWindow(window: TWindowHandle): void;
-	showWindow(window: TWindowHandle): void;
-	windowShouldClose(window: TWindowHandle): number;
-	setWindowShouldClose(window: TWindowHandle, value: number): void;
-	getWindowAttrib(window: TWindowHandle, attrib: number): number;
-	setWindowAttrib(window: TWindowHandle, attrib: number, value: number): void;
+	) => void;
+	setWindowAspectRatio: (window: TWindowHandle, numerator?: number, denominator?: number) => void;
+	setWindowPos: (window: TWindowHandle, x: number, y: number) => void;
+	getWindowPos: (window: TWindowHandle) => TPos;
+	getWindowOpacity: (window: TWindowHandle) => number;
+	setWindowOpacity: (window: TWindowHandle, opacity: number) => void;
+	maximizeWindow: (window: TWindowHandle) => void;
+	focusWindow: (window: TWindowHandle) => void;
+	requestWindowAttention: (window: TWindowHandle) => void;
+	getWindowMonitor: (window: TWindowHandle) => TMonitor | null;
+	getFramebufferSize: (window: TWindowHandle) => TSize;
+	iconifyWindow: (window: TWindowHandle) => void;
+	restoreWindow: (window: TWindowHandle) => void;
+	hideWindow: (window: TWindowHandle) => void;
+	showWindow: (window: TWindowHandle) => void;
+	windowShouldClose: (window: TWindowHandle) => number;
+	setWindowShouldClose: (window: TWindowHandle, value: number) => void;
+	getWindowAttrib: (window: TWindowHandle, attrib: number) => number;
+	setWindowAttrib: (window: TWindowHandle, attrib: number, value: number) => void;
 	/**
 	 * Draw one frame by polling events, calling `callback`, and swapping buffers.
 	 */
-	drawWindow(window: TWindowHandle, callback: (time: number) => void): void;
-	setInputMode(window: TWindowHandle, mode: number, value: number): void;
-	getInputMode(window: TWindowHandle, mode: number): number;
-	pollEvents(): void;
-	waitEvents(): void;
-	waitEventsTimeout(timeout: number): void;
-	postEmptyEvent(): void;
-	getKey(window: TWindowHandle, key: number): number;
-	getMouseButton(window: TWindowHandle, button: number): number;
-	getCursorPos(window: TWindowHandle): TPos;
-	setCursorPos(window: TWindowHandle, x: number, y: number): void;
-	makeContextCurrent(window: TWindowHandle): void;
-	getCurrentContext(window?: TWindowHandle): TWindowHandle | null;
-	swapBuffers(window: TWindowHandle): void;
-	swapInterval(interval: number): void;
-	extensionSupported(extension: string): boolean;
-	rawMouseMotionSupported(): boolean;
-	getKeyName(key: number, scancode: number): string | null;
-	getKeyScancode(key: number): number;
-	createCursor(icon: TImageData): THandle | undefined;
-	createStandardCursor(shape: number): THandle;
-	destroyCursor(cursor: THandle): void;
-	setCursor(window: TWindowHandle, cursor: THandle): void;
-	getJoystickHats(jid: number): readonly number[];
-	joystickIsGamepad(jid: number): boolean;
-	updateGamepadMappings(mappings: string): boolean;
-	getGamepadName(jid: number): string | null;
-	getGamepadState(jid: number): TGamepadState | null;
-	setClipboardString(window: TWindowHandle, value: string): void;
-	getClipboardString(window: TWindowHandle): string;
-	getTimerValue(): number;
-	getTimerFrequency(): number;
-	platformDevice(): THandle;
-	platformWindow(window: TWindowHandle): THandle;
-	platformContext(window: TWindowHandle): THandle;
-	getPlatform(): number;
-	platformSupported(platform: number): number;
+	drawWindow: (window: TWindowHandle, callback: (time: number) => void) => void;
+	setInputMode: (window: TWindowHandle, mode: number, value: number) => void;
+	getInputMode: (window: TWindowHandle, mode: number) => number;
+	pollEvents: () => void;
+	waitEvents: () => void;
+	waitEventsTimeout: (timeout: number) => void;
+	postEmptyEvent: () => void;
+	getKey: (window: TWindowHandle, key: number) => number;
+	getMouseButton: (window: TWindowHandle, button: number) => number;
+	getCursorPos: (window: TWindowHandle) => TPos;
+	setCursorPos: (window: TWindowHandle, x: number, y: number) => void;
+	makeContextCurrent: (window: TWindowHandle) => void;
+	getCurrentContext: (window?: TWindowHandle) => TWindowHandle | null;
+	swapBuffers: (window: TWindowHandle) => void;
+	swapInterval: (interval: number) => void;
+	extensionSupported: (extension: string) => boolean;
+	rawMouseMotionSupported: () => boolean;
+	getKeyName: (key: number, scancode: number) => string | null;
+	getKeyScancode: (key: number) => number;
+	createCursor: (icon: TImageData) => THandle | undefined;
+	createStandardCursor: (shape: number) => THandle;
+	destroyCursor: (cursor: THandle) => void;
+	setCursor: (window: TWindowHandle, cursor: THandle) => void;
+	getJoystickHats: (jid: number) => readonly number[];
+	joystickIsGamepad: (jid: number) => boolean;
+	updateGamepadMappings: (mappings: string) => boolean;
+	getGamepadName: (jid: number) => string | null;
+	getGamepadState: (jid: number) => TGamepadState | null;
+	setClipboardString: (window: TWindowHandle, value: string) => void;
+	getClipboardString: (window: TWindowHandle) => string;
+	getTimerValue: () => number;
+	getTimerFrequency: () => number;
+	platformDevice: () => THandle;
+	platformWindow: (window: TWindowHandle) => THandle;
+	platformContext: (window: TWindowHandle) => THandle;
+	getPlatform: () => number;
+	platformSupported: (platform: number) => number;
 	/** Draws a test scene, used by examples in this package. */
-	testScene(width?: number, height?: number, z?: number): void;
+	testScene: (width?: number, height?: number, z?: number) => void;
 	/** Draws a test scene that reacts to a joystick. */
-	testJoystick(
+	testJoystick: (
 		width: number,
 		height: number,
 		translateX: number,
@@ -482,25 +483,25 @@ type TNativeMethods = {
 		rotateY: number,
 		rotateZ: number,
 		angle: number,
-	): void;
-	getJoystickGUID(jid: number): string | null;
-	vulkanSupported(): boolean;
-	getRequiredInstanceExtensions(): readonly string[];
-	getInstanceProcAddress(instance: THandle, name: string): THandle;
-	getPhysicalDevicePresentationSupport(
+	) => void;
+	getJoystickGUID: (jid: number) => string | null;
+	vulkanSupported: () => boolean;
+	getRequiredInstanceExtensions: () => readonly string[];
+	getInstanceProcAddress: (instance: THandle, name: string) => THandle;
+	getPhysicalDevicePresentationSupport: (
 		instance: THandle,
 		physicalDevice: THandle,
 		queueFamily: number,
-	): boolean;
-	createWindowSurface(
+	) => boolean;
+	createWindowSurface: (
 		instance: THandle,
 		window: TWindowHandle,
 		allocator?: THandle,
-	): THandle | null;
-	vulkanCreateInstance(): THandle | null;
-	vulkanCreateDevice(instance: THandle): TVulkanDevice | null;
-	vulkanDestroyDevice(instance: THandle, device: THandle): void;
-	vulkanDestroyInstance(instance: THandle): void;
+	) => THandle | null;
+	vulkanCreateInstance: () => THandle | null;
+	vulkanCreateDevice: (instance: THandle) => TVulkanDevice | null;
+	vulkanDestroyDevice: (instance: THandle, device: THandle) => void;
+	vulkanDestroyInstance: (instance: THandle) => void;
 };
 
 type TNative = TNativeMethods & Record<TGlfwConstant, number>;

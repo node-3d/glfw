@@ -48,23 +48,23 @@ if (getPlatform() === 'linux') {
 			assert.ok(instance);
 			return instance;
 		};
-		
+
 		before(() => {
 			instance = new Document();
 		});
-		
+
 		after(() => {
 			instance?.destroy();
 		});
-		
+
 		it('can be created', () => {
 			assert.ok(instance instanceof Document);
 		});
-		
+
 		for (const prop of documentProperties) {
 			testProperty(getInstance, prop);
 		}
-		
+
 		for (const method of documentMethods) {
 			testMethod(getInstance, method);
 		}
