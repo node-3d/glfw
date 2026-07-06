@@ -77,7 +77,7 @@ Nothing is added between you and GLFW, unless necessary or explicitly mentioned.
     arguments in specific methods. Such as, `glfw.createWindow` returns a number
     (pointer), and then you provide it back to e.g. `glfw.setWindowTitle`.
 
-See [this example](/examples/vulkan.ts) for raw GLFW calls.
+See [this example](examples/vulkan.ts) for raw GLFW calls.
 
 The public entrypoint exports `glfw`, `Window`, `Document`, and event/window option types.
 The lower-level raw API is on `glfw`; the higher-level classes are imported directly.
@@ -100,7 +100,7 @@ The first window creates an additional invisible root-window for context sharing
 (so that you can also close any window and still keep the root context).
 The platform context (pointers/handles) for sharing may be obtained when necessary.
 
-See [`ts/window.ts`](/ts/window.ts) for more details.
+See [`ts/window.ts`](ts/window.ts) for more details.
 
 ----------
 
@@ -118,7 +118,7 @@ There are some tricks to provide WebGL libraries with necessary environment.
 Document is specifically designed for compatibility with [three.js](https://threejs.org/).
 Other web libraries may work too, but may require additional tweaking.
 
-See [`ts/document.ts`](/ts/document.ts) for more details.
+See [`ts/document.ts`](ts/document.ts) for more details.
 
 ----------
 
