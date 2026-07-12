@@ -9,7 +9,8 @@
 
 namespace glfw {
 
-DBG_EXPORT JS_METHOD(platformDevice) { NAPI_ENV;
+DBG_EXPORT JS_METHOD(platformDevice) {
+	NAPI_ENV;
 #ifdef _WIN32
 	RET_PTR(wglGetCurrentDC());
 #elif __linux__
@@ -25,7 +26,9 @@ DBG_EXPORT JS_METHOD(platformDevice) { NAPI_ENV;
 }
 
 
-DBG_EXPORT JS_METHOD(platformWindow) { NAPI_ENV; THIS_WINDOW;
+DBG_EXPORT JS_METHOD(platformWindow) {
+	NAPI_ENV;
+	THIS_WINDOW;
 #ifdef _WIN32
 	RET_PTR(glfwGetWin32Window(window));
 #elif __linux__
@@ -40,7 +43,9 @@ DBG_EXPORT JS_METHOD(platformWindow) { NAPI_ENV; THIS_WINDOW;
 }
 
 
-DBG_EXPORT JS_METHOD(platformContext) { NAPI_ENV; THIS_WINDOW;
+DBG_EXPORT JS_METHOD(platformContext) {
+	NAPI_ENV;
+	THIS_WINDOW;
 #ifdef _WIN32
 	RET_PTR(glfwGetWGLContext(window));
 #elif __linux__
@@ -55,11 +60,13 @@ DBG_EXPORT JS_METHOD(platformContext) { NAPI_ENV; THIS_WINDOW;
 }
 
 
-DBG_EXPORT JS_METHOD(getPlatform) { NAPI_ENV;
+DBG_EXPORT JS_METHOD(getPlatform) {
+	NAPI_ENV;
 	RET_NUM(glfwGetPlatform());
 }
 
-DBG_EXPORT JS_METHOD(platformSupported) { NAPI_ENV;
+DBG_EXPORT JS_METHOD(platformSupported) {
+	NAPI_ENV;
 	REQ_INT_ARG(0, platform);
 	RET_NUM(glfwPlatformSupported(platform));
 }

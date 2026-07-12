@@ -4,6 +4,6 @@
 
 
 namespace glfw {
-	DBG_EXPORT JS_METHOD(getVersion);
-	DBG_EXPORT JS_METHOD(getVersionString);
+DBG_EXPORT JS_METHOD(getVersion);
+DBG_EXPORT JS_METHOD(getVersionString);
 } // namespace glfw

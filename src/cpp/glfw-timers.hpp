@@ -4,6 +4,6 @@
 
 
 namespace glfw {
-	DBG_EXPORT JS_METHOD(getTimerValue);
-	DBG_EXPORT JS_METHOD(getTimerFrequency);
+DBG_EXPORT JS_METHOD(getTimerValue);
+DBG_EXPORT JS_METHOD(getTimerFrequency);
 } // namespace glfw

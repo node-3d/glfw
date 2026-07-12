@@ -4,12 +4,14 @@
 
 namespace glfw {
 
-DBG_EXPORT JS_METHOD(getTimerValue) { NAPI_ENV;
+DBG_EXPORT JS_METHOD(getTimerValue) {
+	NAPI_ENV;
 	RET_NUM(glfwGetTimerValue());
 }
 
 
-DBG_EXPORT JS_METHOD(getTimerFrequency) { NAPI_ENV;
+DBG_EXPORT JS_METHOD(getTimerFrequency) {
+	NAPI_ENV;
 	RET_NUM(glfwGetTimerFrequency());
 }
 

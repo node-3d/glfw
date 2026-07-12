@@ -3,11 +3,11 @@
 #include <addon-tools.hpp>
 
 #ifdef _WIN32
-	#define VK_USE_PLATFORM_WIN32_KHR
+#define VK_USE_PLATFORM_WIN32_KHR
 #elif __APPLE__
-	#define VK_USE_PLATFORM_MACOS_MVK
+#define VK_USE_PLATFORM_MACOS_MVK
 #elif __linux__
-	#define VK_USE_PLATFORM_XCB_KHR
+#define VK_USE_PLATFORM_XCB_KHR
 #endif
 
 
@@ -22,24 +22,21 @@
 #undef False
 
 
-#define THIS_WINDOW                                                           \
-	REQ_EXT_ARG(0, __window_handle);                                          \
-	GLFWwindow *window = static_cast<GLFWwindow*>(__window_handle);            \
-	if (!window) {                                                            \
-		JS_THROW("Window pointer must not be null.");                         \
-		RET_UNDEFINED;                                                        \
+#define THIS_WINDOW                                                                                          \
+	REQ_EXT_ARG(0, __window_handle);                                                                         \
+	GLFWwindow *window = static_cast<GLFWwindow *>(__window_handle);                                         \
+	if (!window) {                                                                                           \
+		JS_THROW("Window pointer must not be null.");                                                        \
+		RET_UNDEFINED;                                                                                       \
 	}
 
 
-#define THIS_STATE                                                            \
-	WinState *state = reinterpret_cast<WinState*>(glfwGetWindowUserPointer(window));
+#define THIS_STATE WinState *state = reinterpret_cast<WinState *>(glfwGetWindowUserPointer(window));
 
 
-#define STATE_ENV                                                             \
-	Napi::Env env = state->emitter.Env();
+#define STATE_ENV Napi::Env env = state->emitter.Env();
 
-#define RET_GLFW_VOID                                                         \
-	return glfw::undefined;
+#define RET_GLFW_VOID return glfw::undefined;
 
 inline Napi::Number NewInt64(napi_env env, int64_t val) {
 	napi_value value;
@@ -50,7 +47,7 @@ inline Napi::Number NewInt64(napi_env env, int64_t val) {
 
 #define RET_PTR(VAL) return NewInt64(env, reinterpret_cast<int64_t>(VAL))
 #define RET_WINDOW(VAL) RET_EXT(VAL)
-	
+
 namespace glfw {
-	Napi::Value undefined;
+Napi::Value undefined;
 }
