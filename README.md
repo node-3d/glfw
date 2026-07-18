@@ -11,6 +11,22 @@ This is a part of [Node3D](https://github.com/node-3d) project.
 npm install @node-3d/glfw
 ```
 
+## Binary Provenance
+
+Release binary archives for this package are published by public GitHub Actions
+workflows.
+When a release asset includes a GitHub Artifact Attestation, you can verify that
+the downloaded archive was published by the visible workflow in this repository:
+
+```console
+gh release download <tag> -R node-3d/glfw -p <platform>.gz
+gh attestation verify <platform>.gz -R node-3d/glfw
+```
+
+The attestation links the archive to the repository, workflow, commit, and
+release build identity. It does not replace review of the source code, workflow,
+or third-party library contents.
+
 **Node.js** addon with **GLFW3** bindings.
 
 ![Example](examples/screenshot.jpg)
