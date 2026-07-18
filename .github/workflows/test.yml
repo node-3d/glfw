@@ -16,7 +16,7 @@ jobs:
     name: Unit Tests
     strategy:
         matrix:
-          os: [ubuntu-22.04, ubuntu-22.04-arm, windows-2022, macos-14]
+          os: [ubuntu-22.04, ubuntu-22.04-arm, windows-2022, macos-26]
 
     runs-on: ${{ matrix.os }}
 
@@ -48,5 +48,5 @@ jobs:
         run: xvfb-run --auto-servernum npm run test:ci
 
       - name: Run Unit Tests - Mac
-        if: matrix.os == 'macos-14'
+        if: matrix.os == 'macos-26'
         run: npm run test:ci
