@@ -11,6 +11,11 @@
 		"sourceMap": false,
 		"rootDir": ".",
 		"outDir": "dist",
+		"paths": {
+			"@node-3d/glfw": [
+				"./ts/index.ts"
+			]
+		},
 		"verbatimModuleSyntax": true,
 		"skipLibCheck": true,
 		"types": [

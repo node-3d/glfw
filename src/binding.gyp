@@ -32,7 +32,7 @@
 					'-Wl,-rpath,@loader_path',
 					'-Wl,-rpath,@loader_path/../node_modules/@node-3d/deps-opengl/<(bin)',
 					'-Wl,-rpath,@loader_path/../../@node-3d/deps-opengl/<(bin)',
-					'<(gl_bin)/glfw.dylib',
+					'<(gl_bin)/libglfw.3.dylib',
 				],
 			}],
 			['OS=="win"', {
