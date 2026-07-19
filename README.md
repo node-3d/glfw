@@ -11,18 +11,7 @@ This is a part of [Node3D](https://github.com/node-3d) project.
 npm install @node-3d/glfw
 ```
 
-## Binary Origin
 
-Release archives are built by this repository's public GitHub Actions workflows.
-
-Attestations: https://github.com/node-3d/glfw/attestations
-
-To verify a downloaded archive:
-
-```bash
-gh release download <tag> -R node-3d/glfw -p <platform>.gz
-gh attestation verify <platform>.gz -R node-3d/glfw
-```
 
 **Node.js** addon with **GLFW3** bindings.
 
@@ -148,3 +137,16 @@ See [`ts/document.ts`](ts/document.ts) for more details.
     or whatever is similar on other systems.
 * `glfw.platformContext(w: number): number` - returns the window WGL Context on Windows,
     or whatever is similar on other systems.
+
+## Binary Origin
+
+Release archives are built by this repository's public GitHub Actions workflows.
+
+Attestations: https://github.com/node-3d/glfw/attestations
+
+To verify a downloaded archive:
+
+```bash
+gh release download <tag> -R node-3d/glfw -p <platform>.gz
+gh attestation verify <platform>.gz -R node-3d/glfw
+```
