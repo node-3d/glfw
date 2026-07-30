@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { getPlatform } from '@node-3d/addon-tools';
-import { Window } from './window.ts';
+import { GlfwWindow } from './window.ts';
 
 const windowProperties = [
 	'handle',
@@ -39,28 +39,28 @@ const windowMethods = [
 	'show',
 ] as const;
 
-const testProperty = (getInstance: () => Window, prop: string): void => {
+const testProperty = (getInstance: () => GlfwWindow, prop: string): void => {
 	it(`#${prop} property exposed`, () => {
 		assert.notStrictEqual(Reflect.get(getInstance(), prop), undefined);
 	});
 };
 
-const testMethod = (getInstance: () => Window, method: string): void => {
+const testMethod = (getInstance: () => GlfwWindow, method: string): void => {
 	it(`#${method}() method exposed`, () => {
 		assert.strictEqual(typeof Reflect.get(getInstance(), method), 'function');
 	});
 };
 
 if (getPlatform() === 'linux') {
-	describe('Window', () => {
-		let instance: Window | null = null;
-		const getInstance = (): Window => {
+	describe('GlfwWindow', () => {
+		let instance: GlfwWindow | null = null;
+		const getInstance = (): GlfwWindow => {
 			assert.ok(instance);
 			return instance;
 		};
 
 		before(() => {
-			instance = new Window();
+			instance = new GlfwWindow();
 		});
 
 		after(() => {
@@ -68,7 +68,7 @@ if (getPlatform() === 'linux') {
 		});
 
 		it('can be created', () => {
-			assert.ok(instance instanceof Window);
+			assert.ok(instance instanceof GlfwWindow);
 		});
 
 		for (const prop of windowProperties) {

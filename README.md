@@ -21,16 +21,18 @@ npm install @node-3d/glfw
 * Exposes low-level **GLFW** interface.
 * Multiple windows for a single **Node.js** process.
 * Able to switch to fullscreen and back.
-* Has `Window` class, simplifying low-level interactions.
-* Has `Document` class, capable of tricking other libs, as if we are in a browser.
+* Has `GlfwWindow` class, simplifying low-level interactions.
+* Keeps legacy `Window` and `Document` classes for browser-like compatibility.
 
 The package has named exports only. Use `glfw` for the raw native bindings,
-and import `Window` or `Document` directly for the higher-level classes.
+and import `GlfwWindow` directly for the native window wrapper. For new browser-like
+applications, prefer `BrowserWindow` and `BrowserDocument` from
+[@node-3d/core](https://github.com/node-3d/core).
 
 ```ts
-import { glfw, Window } from '@node-3d/glfw';
+import { GlfwWindow, glfw } from '@node-3d/glfw';
 
-const wnd = new Window({ title: 'GLFW Test', vsync: true });
+const wnd = new GlfwWindow({ title: 'GLFW Test', vsync: true });
 
 wnd.loop(() => {
 	if (wnd.shouldClose || wnd.getKey(glfw.KEY_ESCAPE)) {
@@ -71,7 +73,7 @@ Nothing is added between you and GLFW, unless necessary or explicitly mentioned.
 * All `GLFW_*` constants are accessible as
     `glfw.*`. E.g. `GLFW_TRUE` -> `glfw.TRUE`.
 * Higher-level helpers are separate named exports.
-    E.g. `import { Window, Document } from '@node-3d/glfw'`.
+    E.g. `import { GlfwWindow } from '@node-3d/glfw'`.
 * Method `glfw.createWindow` takes some additional arguments. This is mostly related to
     JS events being generated from GLFW callbacks,
     and here's where you provide an Emitter object.
@@ -81,18 +83,19 @@ Nothing is added between you and GLFW, unless necessary or explicitly mentioned.
 
 See [this example](examples/vulkan.ts) for raw GLFW calls.
 
-The public entrypoint exports `glfw`, `Window`, `Document`, and event/window option types.
-The lower-level raw API is on `glfw`; the higher-level classes are imported directly.
+The public entrypoint exports `glfw`, `GlfwWindow`, legacy `Window`, legacy `Document`,
+and event/window option types. The lower-level raw API is on `glfw`; the classes are
+imported directly.
 
 ----------
 
 
-### class Window
+### class GlfwWindow
 
 ```ts
-import { Window } from '@node-3d/glfw';
+import { GlfwWindow } from '@node-3d/glfw';
 
-const wnd = new Window({ title: 'GLFW Test', vsync: true });
+const wnd = new GlfwWindow({ title: 'GLFW Test', vsync: true });
 ```
 
 This class helps managing window objects and their events. It can also switch between
@@ -104,6 +107,10 @@ The platform context (pointers/handles) for sharing may be obtained when necessa
 
 See [`ts/window.ts`](ts/window.ts) for more details.
 
+`Window` remains available as a legacy subclass with `requestAnimationFrame` and
+`cancelAnimationFrame`. New browser-style code should use `BrowserWindow` from
+`@node-3d/core`.
+
 ----------
 
 ### class Document
@@ -114,10 +121,11 @@ import { Document } from '@node-3d/glfw';
 const doc = new Document({ title: 'GLFW Test', vsync: true });
 ```
 
-Document inherits from `Window` and has the same features in general.
+Document inherits from legacy `Window` and has the same features in general.
 It exposes additional APIs to mimic the content of web `document`.
 There are some tricks to provide WebGL libraries with necessary environment.
-Document is specifically designed for compatibility with [three.js](https://threejs.org/).
+Document is kept for compatibility; new browser-style code should use `BrowserDocument`
+from `@node-3d/core`.
 Other web libraries may work too, but may require additional tweaking.
 
 See [`ts/document.ts`](ts/document.ts) for more details.
@@ -128,8 +136,8 @@ See [`ts/document.ts`](ts/document.ts) for more details.
 
 * `glfw.hideConsole(): void` - tries to hide the console window on Windows.
 * `glfw.showConsole(): void` - shows the console window if it has been hidden.
-* `glfw.drawWindow(w: number, cb: (dateNow: number) => void): void` - this is a shortcut
-    to call `pollEvents`, then `cb`, and then `swapBuffers`. `Window#drawWindow`
+* `glfw.drawWindow(w: number, cb: (timestamp: number) => void): void` - this is a shortcut
+    to call `pollEvents`, then `cb`, and then `swapBuffers`. `GlfwWindow#drawWindow`
     wraps this call and supplies the window handle for you.
 * `glfw.platformDevice(): number` - returns the native display or device handle,
     or whatever is similar on other systems.

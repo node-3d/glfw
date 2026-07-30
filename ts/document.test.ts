@@ -23,6 +23,7 @@ const documentMethods = [
 	'getElementsByTagName',
 	'createElementNS',
 	'createElement',
+	'contains',
 	'dispatchEvent',
 	'addEventListener',
 	'removeEventListener',

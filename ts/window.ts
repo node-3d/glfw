@@ -21,6 +21,8 @@ import type {
 
 // oxlint-disable max-lines
 
+export type TAnimationFrameCallback = (timestamp: number) => void;
+
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 
@@ -55,19 +57,19 @@ export type TWindowOpts = Readonly<
 		/**
 		 * Called right before window creation.
 		 *
-		 * `window` is the current Window object. `glfw` is the raw GLFW binding.
+		 * `window` is the current GlfwWindow object. `glfw` is the raw GLFW binding.
 		 */
-		onBeforeWindow: (window: Window, glfw: unknown) => void;
+		onBeforeWindow: (window: GlfwWindow, glfw: unknown) => void;
 	}>
 >;
 
 /**
- * GLFW Window API wrapper.
+ * Native GLFW Window API wrapper.
  *
- * Window is a higher-level JS wrapper for the GLFW API. It helps managing
- * window instances and extends EventEmitter to provide event handling.
+ * GlfwWindow is a JS wrapper for native GLFW window operations. It manages
+ * native window instances and extends EventEmitter to provide event handling.
  */
-export class Window extends EventEmitter {
+export class GlfwWindow extends EventEmitter {
 	public constructor(opts: TWindowOpts = {}) {
 		super();
 
@@ -83,20 +85,7 @@ export class Window extends EventEmitter {
 		this._readContextAttributes();
 		this._bindStateEvents();
 
-		this.requestAnimationFrame = (cb) => setImmediate(() => glfw.drawWindow(this._window, cb));
-		this.cancelAnimationFrame = (id) => {
-			clearImmediate(id);
-		};
-
-		this._rafCb = () => {
-			/* nop */
-		};
-		this._drawWithCb = () => glfw.drawWindow(this._window, this._rafCb);
-
-		this.frame = (cb) => {
-			this._rafCb = cb;
-			return setImmediate(this._drawWithCb);
-		};
+		this.frame = (cb) => setImmediate(() => glfw.drawWindow(this._window, cb));
 
 		this.loop = (cb) => {
 			let next: NodeJS.Immediate | null = null;
@@ -575,27 +564,19 @@ export class Window extends EventEmitter {
 		glfw.setCursorPos(this._window, x, y);
 	}
 
-	/** Bound `requestAnimationFrame` method, returns a timer id. */
-	public requestAnimationFrame: (callback: (dateNow: number) => void) => NodeJS.Immediate;
-
-	/** Bound `cancelAnimationFrame` method. Cancels by id. */
-	public cancelAnimationFrame: (id: NodeJS.Immediate) => void;
-
 	/**
 	 * Bound optimized single-frame method, returns a timer id.
 	 *
-	 * This method should only have one call per frame. Like `requestAnimationFrame`
-	 * it issues a `setImmediate`, but does not need to create a new arrow function
-	 * for the frame runner.
+	 * Direct one-shot native draw call, scheduled through `setImmediate`.
 	 */
-	public frame: (callback: (dateNow: number) => void) => NodeJS.Immediate;
+	public frame: (callback: TAnimationFrameCallback) => NodeJS.Immediate;
 
 	/**
 	 * Bound optimized loop method that continuously generates frames with `callback`.
 	 *
 	 * The returned function breaks the loop.
 	 */
-	public loop: (callback: (dateNow: number) => void) => () => void;
+	public loop: (callback: TAnimationFrameCallback) => () => void;
 
 	/** Currently dispatched event, or null outside event dispatch. */
 	public event: TEvent | null;
@@ -747,7 +728,7 @@ export class Window extends EventEmitter {
 	}
 
 	/** Draw one frame by polling events, calling `callback`, and swapping buffers. */
-	public drawWindow(cb: (dateNow: number) => void): void {
+	public drawWindow(cb: TAnimationFrameCallback): void {
 		glfw.drawWindow(this._window, cb);
 	}
 
@@ -864,12 +845,6 @@ export class Window extends EventEmitter {
 
 	// Current window Y coordinate.
 	private _y: number = 0;
-
-	// Cached frame callback used by the optimized frame path.
-	private _rafCb: (dateNow: number) => void;
-
-	// Cached draw runner used by the optimized frame path.
-	private _drawWithCb: () => void;
 
 	// Initialize cached fields from constructor options before creating a GLFW window.
 	private _readOptions(opts: TWindowOpts): void {

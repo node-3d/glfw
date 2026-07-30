@@ -2,7 +2,7 @@ import { getLogger } from '@node-3d/addon-tools';
 import { emptyFunction, ESC_KEY, F_KEY } from './constants.ts';
 import { FakeImage } from './fake-image.ts';
 import { glfw } from './core.ts';
-import { Window } from './window.ts';
+import { Window } from './legacy-window.ts';
 import type { TCbVoid, TSize, TWebgl } from './types.ts';
 
 const logger = getLogger('glfw');
@@ -237,6 +237,11 @@ export class Document extends Window {
 	/** Returns an array containing `this`. */
 	public getElementsByTagName(): readonly Document[] {
 		return [this];
+	}
+
+	/** Returns whether `node` is this document. */
+	public contains(node: unknown): boolean {
+		return node === this;
 	}
 
 	/** Does nothing. */

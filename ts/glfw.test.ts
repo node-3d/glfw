@@ -11,6 +11,10 @@ describe('GLFW exports', () => {
 		assert.strictEqual(typeof glfwModule.Window, 'function');
 	});
 
+	it('exports GlfwWindow', () => {
+		assert.strictEqual(typeof glfwModule.GlfwWindow, 'function');
+	});
+
 	it('exports Document', () => {
 		assert.strictEqual(typeof glfwModule.Document, 'function');
 	});

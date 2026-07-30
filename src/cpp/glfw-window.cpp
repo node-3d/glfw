@@ -20,10 +20,8 @@ bool isHintVisible = true;
 GLFWwindow *_share = nullptr;
 
 
-static inline uint64_t getUnixTime() {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(
-	           std::chrono::system_clock::now().time_since_epoch()
-	)
+static inline double getTimestamp() {
+	return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch())
 	    .count();
 }
 
@@ -501,7 +499,7 @@ DBG_EXPORT JS_METHOD(drawWindow) {
 
 	glfwPollEvents();
 
-	napi_value args[1] = { JS_NUM(getUnixTime()) };
+	napi_value args[1] = { JS_NUM(getTimestamp()) };
 	cb.Call(1, args);
 
 	glfwSwapBuffers(window);
