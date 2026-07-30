@@ -1,7 +1,12 @@
-import { glfw, Window } from '@node-3d/glfw';
+import { GlfwWindow, glfw } from '@node-3d/glfw';
 
 const windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
-	const w = new Window({ title: `GLFW Multiwindow ${i}`, vsync: false, width: 200, height: 200 });
+	const w = new GlfwWindow({
+		title: `GLFW Multiwindow ${i}`,
+		vsync: false,
+		width: 200,
+		height: 200,
+	});
 	const render = () => {
 		w.makeCurrent();
 		glfw.testScene(w.width, w.height);

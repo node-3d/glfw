@@ -11,8 +11,6 @@ This is a part of [Node3D](https://github.com/node-3d) project.
 npm install @node-3d/glfw
 ```
 
-
-
 **Node.js** addon with **GLFW3** bindings.
 
 ![Example](examples/screenshot.jpg)
@@ -21,13 +19,13 @@ npm install @node-3d/glfw
 * Exposes low-level **GLFW** interface.
 * Multiple windows for a single **Node.js** process.
 * Able to switch to fullscreen and back.
-* Has `GlfwWindow` class, simplifying low-level interactions.
-* Keeps legacy `Window` and `Document` classes for browser-like compatibility.
+* Provides `GlfwWindow`, a native GLFW window wrapper for direct window/control work.
+* Keeps legacy `Window` and `Document` classes for compatibility with older code.
+* Leaves browser-like `Window`/`Document`/canvas behavior to
+  [@node-3d/core](https://github.com/node-3d/core).
 
 The package has named exports only. Use `glfw` for the raw native bindings,
-and import `GlfwWindow` directly for the native window wrapper. For new browser-like
-applications, prefer `BrowserWindow` and `BrowserDocument` from
-[@node-3d/core](https://github.com/node-3d/core).
+and import `GlfwWindow` directly for native window management.
 
 ```ts
 import { GlfwWindow, glfw } from '@node-3d/glfw';
@@ -48,6 +46,24 @@ wnd.loop(() => {
 Node.js versions. Addon binaries are precompiled and **there is no compilation**
 step during the `npm install` command.
 
+Prebuilt addon binaries are provided for Windows x64/ARM64, Linux x64/ARM64,
+and macOS x64/ARM64.
+
+## Concern Separation
+
+`@node-3d/glfw` is the GLFW layer:
+
+* `glfw` exposes the raw native GLFW binding and constants.
+* `GlfwWindow` wraps a native GLFW window handle with event, size, mode, context,
+  frame, and loop helpers.
+* `Window` and `Document` remain as legacy compatibility classes.
+
+Browser-style application compatibility belongs in `@node-3d/core`:
+
+* `BrowserWindow` owns browser-style `requestAnimationFrame`.
+* `BrowserDocument` owns document/canvas/image/WebGL compatibility.
+* `init()` wires `globalThis.window`, `globalThis.document`, WebGL, Image, and
+  other browser-like globals.
 
 ## GLFW
 
@@ -83,9 +99,9 @@ Nothing is added between you and GLFW, unless necessary or explicitly mentioned.
 
 See [this example](examples/vulkan.ts) for raw GLFW calls.
 
-The public entrypoint exports `glfw`, `GlfwWindow`, legacy `Window`, legacy `Document`,
-and event/window option types. The lower-level raw API is on `glfw`; the classes are
-imported directly.
+The public entrypoint exports `glfw`, `GlfwWindow`, legacy `Window`, legacy
+`Document`, and event/window option types. The lower-level raw API is on `glfw`;
+the classes are imported directly.
 
 ----------
 
@@ -98,8 +114,9 @@ import { GlfwWindow } from '@node-3d/glfw';
 const wnd = new GlfwWindow({ title: 'GLFW Test', vsync: true });
 ```
 
-This class helps managing window objects and their events. It can also switch between
-fullscreen, borderless and windowed modes.
+This class manages native window objects and their events. It can also switch between
+fullscreen, borderless and windowed modes. It does not implement browser
+`requestAnimationFrame` or document/canvas compatibility.
 
 The first window creates an additional invisible root-window for context sharing
 (so that you can also close any window and still keep the root context).
@@ -107,13 +124,13 @@ The platform context (pointers/handles) for sharing may be obtained when necessa
 
 See [`ts/window.ts`](ts/window.ts) for more details.
 
-`Window` remains available as a legacy subclass with `requestAnimationFrame` and
+Legacy `Window` remains available as a subclass with `requestAnimationFrame` and
 `cancelAnimationFrame`. New browser-style code should use `BrowserWindow` from
 `@node-3d/core`.
 
 ----------
 
-### class Document
+### Legacy class Document
 
 ```ts
 import { Document } from '@node-3d/glfw';
@@ -124,8 +141,8 @@ const doc = new Document({ title: 'GLFW Test', vsync: true });
 Document inherits from legacy `Window` and has the same features in general.
 It exposes additional APIs to mimic the content of web `document`.
 There are some tricks to provide WebGL libraries with necessary environment.
-Document is kept for compatibility; new browser-style code should use `BrowserDocument`
-from `@node-3d/core`.
+Document is kept for compatibility; new browser-style code should use
+`BrowserDocument` from `@node-3d/core`.
 Other web libraries may work too, but may require additional tweaking.
 
 See [`ts/document.ts`](ts/document.ts) for more details.

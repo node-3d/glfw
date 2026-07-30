@@ -1,8 +1,8 @@
-import { glfw, Window } from '@node-3d/glfw';
+import { GlfwWindow, glfw } from '@node-3d/glfw';
 
 // Default MSAA is 0
-const w1 = new Window({ title: 'GLFW MSAA x0', msaa: 0, vsync: true, width: 640, height: 480 });
-const w2 = new Window({ title: 'GLFW MSAA x4', msaa: 4, vsync: true, width: 640, height: 480 });
+const w1 = new GlfwWindow({ title: 'GLFW MSAA x0', msaa: 0, vsync: true, width: 640, height: 480 });
+const w2 = new GlfwWindow({ title: 'GLFW MSAA x4', msaa: 4, vsync: true, width: 640, height: 480 });
 
 const draw = () => {
 	glfw.pollEvents();

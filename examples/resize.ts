@@ -1,6 +1,6 @@
-import { glfw, Window } from '@node-3d/glfw';
+import { GlfwWindow, glfw } from '@node-3d/glfw';
 
-const w1 = new Window({ title: 'GLFW Resize', vsync: true });
+const w1 = new GlfwWindow({ title: 'GLFW Resize', vsync: true });
 
 // testing events
 w1.on('keydown', () => {

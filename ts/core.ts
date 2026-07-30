@@ -24,6 +24,6 @@ if (!nodeGlobal.__isGlfwInited) {
 /**
  * Raw GLFW native bindings.
  *
- * Use `Window` and `Document` for higher-level wrappers.
+ * Use `GlfwWindow` for a native window wrapper. Browser-style wrappers live in @node-3d/core.
  */
 export const glfw = native;

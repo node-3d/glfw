@@ -1,7 +1,7 @@
-import { glfw, Window } from '@node-3d/glfw';
+import { GlfwWindow, glfw } from '@node-3d/glfw';
 import type { TEvent } from '@node-3d/glfw';
 
-const w1 = new Window({ title: 'GLFW Events', vsync: true });
+const w1 = new GlfwWindow({ title: 'GLFW Events', vsync: true });
 
 const makeEventLogger = (name: string) => (e: TEvent) => {
 	e.target = null;

@@ -1,4 +1,4 @@
-import { glfw, Window } from '@node-3d/glfw';
+import { GlfwWindow, glfw } from '@node-3d/glfw';
 import type { TWindowMode } from '@node-3d/glfw';
 
 let mode: TWindowMode = 'windowed';
@@ -9,7 +9,7 @@ if (process.argv.includes('--fullscreen')) {
 	mode = 'borderless';
 }
 
-const w1 = new Window({ title: 'GLFW Modes', mode, vsync: true });
+const w1 = new GlfwWindow({ title: 'GLFW Modes', mode, vsync: true });
 
 w1.on('resize', ({ width, height }) => console.log('Resized to', width, 'x', height));
 

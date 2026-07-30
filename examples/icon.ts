@@ -1,6 +1,6 @@
-import { glfw, Window } from '@node-3d/glfw';
+import { GlfwWindow, glfw } from '@node-3d/glfw';
 
-const w1 = new Window({ title: 'GLFW Icon', vsync: true });
+const w1 = new GlfwWindow({ title: 'GLFW Icon', vsync: true });
 
 const ICON_SIZE = 32;
 
