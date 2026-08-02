@@ -47,6 +47,40 @@ try {
 	process.exitCode = 1;
 }
 `;
+const surfacelessChildSource = String.raw`
+const reportPrefix = '${reportPrefix}';
+
+const asMessage = (error) => error instanceof Error ? error.name + ': ' + error.message : String(error);
+
+const writeReport = (report) => {
+	console.log(reportPrefix + JSON.stringify(report));
+};
+
+try {
+	const { native: glfw } = await import(process.env.NODE_3D_GLFW_NATIVE_URL);
+	const result = glfw.testSurfacelessEgl(16, 16);
+	const pixels = result.pixels;
+	writeReport({
+		ok: true,
+		details: {
+			mode: result.mode,
+			width: result.width,
+			height: result.height,
+			major: result.major,
+			minor: result.minor,
+			surfaceless: result.surfaceless,
+			firstPixel: [pixels[0], pixels[1], pixels[2], pixels[3]],
+			vendor: result.vendor,
+			renderer: result.renderer,
+			version: result.version,
+			clientExtensions: result.clientExtensions,
+		},
+	});
+} catch (error) {
+	writeReport({ ok: false, error: asMessage(error) });
+	process.exitCode = 1;
+}
+`;
 
 const readReport = (stdout) => {
 	const line = stdout.split(/\r?\n/u).find((currentLine) => currentLine.startsWith(reportPrefix));
@@ -108,5 +142,27 @@ for (const mode of modes) {
 		const reason = report?.error || exitText(child);
 		const glfwText = glfwErrors.length > 0 ? `; ${glfwErrors.join(' | ')}` : '';
 		console.log(`[glfw-diag] fail ${mode} ${reason}${glfwText}`);
+	}
+}
+
+if (process.platform === 'darwin') {
+	const child = spawnSync(process.execPath, ['--input-type=module', '--eval', surfacelessChildSource], {
+		encoding: 'utf8',
+		env: {
+			...process.env,
+			NODE_3D_GLFW_NATIVE_URL: nativeUrl,
+		},
+	});
+	const stdout = child.stdout || '';
+	const stderr = child.stderr || '';
+	const report = readReport(stdout);
+
+	if (child.status === 0 && report?.ok) {
+		console.log(`[glfw-diag] ok surfaceless-egl ${JSON.stringify(report.details)}`);
+	} else {
+		const reason = report?.error || exitText(child);
+		const glfwErrors = extractGlfwErrors(`${stdout}\n${stderr}`);
+		const glfwText = glfwErrors.length > 0 ? `; ${glfwErrors.join(' | ')}` : '';
+		console.log(`[glfw-diag] fail surfaceless-egl ${reason}${glfwText}`);
 	}
 }

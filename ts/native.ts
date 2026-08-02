@@ -507,6 +507,22 @@ type TNativeMethods = {
 		renderer: string;
 		version: string;
 	};
+	testSurfacelessEgl: (
+		width?: number,
+		height?: number,
+	) => {
+		mode: string;
+		width: number;
+		height: number;
+		major: number;
+		minor: number;
+		surfaceless: boolean;
+		pixels: Buffer;
+		vendor: string;
+		renderer: string;
+		version: string;
+		clientExtensions: string;
+	};
 	/** Draws a test scene that reacts to a joystick. */
 	testJoystick: (
 		width: number,
