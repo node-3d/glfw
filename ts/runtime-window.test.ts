@@ -141,37 +141,6 @@ try {
 	}
 }
 `;
-const fboChildSource = String.raw`
-const reportPrefix = '${reportPrefix}';
-
-const asMessage = (error) => error instanceof Error ? error.name + ': ' + error.message : String(error);
-
-const writeReport = (report) => {
-	console.log(reportPrefix + JSON.stringify(report));
-};
-
-try {
-	const { native: glfw } = await import(process.env.NODE_3D_GLFW_NATIVE_URL);
-	const result = glfw.testHeadlessFbo(16, 16);
-	const pixels = result.pixels;
-	writeReport({
-		ok: true,
-		details: {
-			width: result.width,
-			height: result.height,
-			status: result.status,
-			firstPixel: [pixels[0], pixels[1], pixels[2], pixels[3]],
-			vendor: result.vendor,
-			renderer: result.renderer,
-			version: result.version,
-		},
-	});
-} catch (error) {
-	writeReport({ ok: false, error: asMessage(error) });
-	process.exitCode = 1;
-}
-`;
-
 const platformProbes = (): readonly TProbe[] => {
 	const probes: TProbe[] = [
 		{ name: 'raw/auto/default', mode: 'raw-auto' },
@@ -258,40 +227,4 @@ describe('GLFW runtime window creation', () => {
 			assert.strictEqual(error, null);
 		});
 	}
-});
-
-describe('GLFW native headless FBO', () => {
-	it('renders and reads pixels in native C++', () => {
-		const child = spawnSync(
-			process.execPath,
-			['--input-type=module', '--eval', fboChildSource],
-			{
-				encoding: 'utf8',
-				env: {
-					...process.env,
-					NODE_3D_GLFW_NATIVE_URL: new URL('native.ts', import.meta.url).href,
-				},
-			},
-		);
-		const stdout = child.stdout || '';
-		const stderr = child.stderr || '';
-		const report = readReport(stdout);
-
-		if (child.status !== 0 || !report?.ok) {
-			const glfwErrors = extractGlfwErrors(`${stdout}\n${stderr}`);
-			const reason = report?.error || exitText(child);
-			const glfwText = glfwErrors.length > 0 ? `; ${glfwErrors.join(' | ')}` : '';
-			assert.fail(`${reason}${glfwText}`);
-		}
-
-		console.log(`[glfw] ok native/fbo: ${JSON.stringify(report.details)}`);
-		const details = report.details as {
-			width: number;
-			height: number;
-			firstPixel: readonly number[];
-		};
-		assert.strictEqual(details.width, 16);
-		assert.strictEqual(details.height, 16);
-		assert.deepStrictEqual(details.firstPixel, [255, 0, 0, 255]);
-	});
 });

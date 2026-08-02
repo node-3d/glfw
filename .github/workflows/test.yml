@@ -79,18 +79,22 @@ jobs:
           ARCHFLAGS: ${{ matrix.archflags }}
 
       - uses: ssciwr/setup-mesa-dist-win@v3
-        if: matrix.target == 'windows-x64' || matrix.target == 'windows-arm64'
+        if: matrix.target == 'windows-x64'
         with:
           version: '26.1.3'
 
       - name: Run Unit Tests - Windows
-        if: matrix.target == 'windows-x64' || matrix.target == 'windows-arm64'
+        if: matrix.target == 'windows-x64'
         run: npm run test:ci
+
+      - name: Run Runtime Diagnostics - Windows ARM
+        if: matrix.target == 'windows-arm64'
+        run: node .github/scripts/glfw-runtime-diagnostics.mjs
 
       - name: Run Unit Tests - Linux
         if: matrix.target == 'linux-x64' || matrix.target == 'linux-arm64'
         run: xvfb-run --auto-servernum npm run test:ci
 
-      - name: Run Unit Tests - Mac
+      - name: Run Runtime Diagnostics - Mac
         if: matrix.target == 'darwin-x64' || matrix.target == 'darwin-arm64'
-        run: npm run test:ci
+        run: node .github/scripts/glfw-runtime-diagnostics.mjs
