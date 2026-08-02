@@ -78,6 +78,11 @@ jobs:
           npm_config_arch: ${{ matrix.node_arch }}
           ARCHFLAGS: ${{ matrix.archflags }}
 
+      - uses: ssciwr/setup-mesa-dist-win@v3
+        if: matrix.target == 'windows-x64' || matrix.target == 'windows-arm64'
+        with:
+          version: '26.1.3'
+
       - name: Run Unit Tests - Windows
         if: matrix.target == 'windows-x64' || matrix.target == 'windows-arm64'
         run: npm run test:ci
