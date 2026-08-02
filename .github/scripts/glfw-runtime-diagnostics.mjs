@@ -82,6 +82,12 @@ const exitText = (child) => {
 
 console.log(`[glfw-diag] node ${process.version} ${process.platform} ${process.arch}`);
 
+if (process.platform === 'darwin') {
+	console.log(
+		`[glfw-diag] mac-env runtime=${process.env.NODE_3D_GLFW_RUNTIME_LIB || '<unset>'} dyld=${process.env.DYLD_LIBRARY_PATH || '<unset>'}`,
+	);
+}
+
 for (const mode of modes) {
 	const child = spawnSync(process.execPath, ['--input-type=module', '--eval', childSource], {
 		encoding: 'utf8',
