@@ -482,6 +482,23 @@ type TNativeMethods = {
 		width?: number,
 		height?: number,
 	) => {
+		mode: string;
+		platform: number;
+		width: number;
+		height: number;
+		status: number;
+		pixels: Buffer;
+		vendor: string;
+		renderer: string;
+		version: string;
+	};
+	testHeadlessFboMode: (
+		mode?: string,
+		width?: number,
+		height?: number,
+	) => {
+		mode: string;
+		platform: number;
 		width: number;
 		height: number;
 		status: number;

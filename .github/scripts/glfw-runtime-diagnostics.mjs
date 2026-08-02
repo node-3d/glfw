@@ -3,6 +3,17 @@ import { spawnSync } from 'node:child_process';
 
 const reportPrefix = '__NODE_3D_GLFW_DIAG__';
 const nativeUrl = new URL('../../ts/native.ts', import.meta.url).href;
+const modes = [
+	'default',
+	'native-loose',
+	'null-native',
+	'null-egl',
+	'null-osmesa',
+	'gles-egl',
+	'angle-d3d11',
+	'angle-vulkan',
+	'angle-metal',
+];
 
 const childSource = String.raw`
 const reportPrefix = '${reportPrefix}';
@@ -15,11 +26,13 @@ const writeReport = (report) => {
 
 try {
 	const { native: glfw } = await import(process.env.NODE_3D_GLFW_NATIVE_URL);
-	const result = glfw.testHeadlessFbo(16, 16);
+	const result = glfw.testHeadlessFboMode(process.env.NODE_3D_GLFW_FBO_MODE, 16, 16);
 	const pixels = result.pixels;
 	writeReport({
 		ok: true,
 		details: {
+			mode: result.mode,
+			platform: result.platform,
 			width: result.width,
 			height: result.height,
 			status: result.status,
@@ -69,22 +82,25 @@ const exitText = (child) => {
 
 console.log(`[glfw-diag] node ${process.version} ${process.platform} ${process.arch}`);
 
-const child = spawnSync(process.execPath, ['--input-type=module', '--eval', childSource], {
-	encoding: 'utf8',
-	env: {
-		...process.env,
-		NODE_3D_GLFW_NATIVE_URL: nativeUrl,
-	},
-});
-const stdout = child.stdout || '';
-const stderr = child.stderr || '';
-const report = readReport(stdout);
+for (const mode of modes) {
+	const child = spawnSync(process.execPath, ['--input-type=module', '--eval', childSource], {
+		encoding: 'utf8',
+		env: {
+			...process.env,
+			NODE_3D_GLFW_FBO_MODE: mode,
+			NODE_3D_GLFW_NATIVE_URL: nativeUrl,
+		},
+	});
+	const stdout = child.stdout || '';
+	const stderr = child.stderr || '';
+	const report = readReport(stdout);
 
-if (child.status === 0 && report?.ok) {
-	console.log(`[glfw-diag] ok native/fbo ${JSON.stringify(report.details)}`);
-} else {
-	const glfwErrors = extractGlfwErrors(`${stdout}\n${stderr}`);
-	const reason = report?.error || exitText(child);
-	const glfwText = glfwErrors.length > 0 ? `; ${glfwErrors.join(' | ')}` : '';
-	console.log(`[glfw-diag] fail native/fbo ${reason}${glfwText}`);
+	if (child.status === 0 && report?.ok) {
+		console.log(`[glfw-diag] ok ${mode} ${JSON.stringify(report.details)}`);
+	} else {
+		const glfwErrors = extractGlfwErrors(`${stdout}\n${stderr}`);
+		const reason = report?.error || exitText(child);
+		const glfwText = glfwErrors.length > 0 ? `; ${glfwErrors.join(' | ')}` : '';
+		console.log(`[glfw-diag] fail ${mode} ${reason}${glfwText}`);
+	}
 }
