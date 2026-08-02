@@ -113,6 +113,7 @@ Napi::Object initModule(Napi::Env env, Napi::Object exports) {
 	JS_GLFW_SET_METHOD(platformSupported);
 
 	JS_GLFW_SET_METHOD(testScene);
+	JS_GLFW_SET_METHOD(testHeadlessFbo);
 	JS_GLFW_SET_METHOD(testJoystick);
 
 	JS_GLFW_SET_METHOD(getJoystickGUID);
