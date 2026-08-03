@@ -5,24 +5,38 @@ target_arch="${1:-$(node -p 'process.arch')}"
 brew_arch=()
 brew_bin="brew"
 
+run_brew() {
+	if [[ "${#brew_arch[@]}" -gt 0 ]]; then
+		"${brew_arch[@]}" "$brew_bin" "$@"
+	else
+		"$brew_bin" "$@"
+	fi
+}
+
 if [[ "$target_arch" == "x64" ]]; then
 	brew_arch=("arch" "-x86_64")
 	brew_bin="/usr/local/bin/brew"
 
 	if [[ ! -x "$brew_bin" ]]; then
 		echo "[mac-gl] installing x86_64 Homebrew into /usr/local"
-		"${brew_arch[@]}" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+		NONINTERACTIVE=1 CI=1 "${brew_arch[@]}" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 	fi
 fi
 
 echo "[mac-gl] target_arch=$target_arch"
 echo "[mac-gl] brew=${brew_arch[*]:-native} $brew_bin"
-"${brew_arch[@]}" "$brew_bin" --version
-"${brew_arch[@]}" "$brew_bin" config
+run_brew --version
+run_brew config
 
-"${brew_arch[@]}" "$brew_bin" install mesa
+if ! run_brew install mesa; then
+	echo "[mac-gl] brew install mesa returned a non-zero status; checking whether Mesa was still installed"
+	if ! run_brew --prefix mesa >/dev/null 2>&1; then
+		echo "[mac-gl] Mesa prefix is unavailable after failed install"
+		exit 1
+	fi
+fi
 
-mesa_prefix="$("${brew_arch[@]}" "$brew_bin" --prefix mesa)"
+mesa_prefix="$(run_brew --prefix mesa)"
 runtime_dir="$PWD/.glfw-runtime-lib"
 mkdir -p "$runtime_dir"
 
@@ -41,6 +55,11 @@ link_lib "libGLESv2.dylib"
 link_lib "libGLESv2.2.dylib"
 link_lib "libGL.dylib"
 link_lib "libGL.1.dylib"
+
+if [[ ! -e "$runtime_dir/libEGL.dylib" || ! -e "$runtime_dir/libGLESv2.dylib" ]]; then
+	echo "[mac-gl] Mesa EGL/GLES dylibs are missing from $mesa_prefix/lib"
+	exit 1
+fi
 
 for target_dir in node_modules/@node-3d/deps-opengl/bin-darwin-* bin-darwin-*; do
 	if [[ -d "$target_dir" ]]; then
