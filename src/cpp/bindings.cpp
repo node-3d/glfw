@@ -22,7 +22,7 @@
 
 
 Napi::Object initModule(Napi::Env env, Napi::Object exports) {
-	std::atexit(glfw::deinit);
+	env.AddCleanupHook(glfw::deinit);
 
 	// ------------ Methods ------------
 
