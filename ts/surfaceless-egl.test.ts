@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { it } from 'node:test';
-import { native } from './native.ts';
+import { renderSurfacelessEglFrame } from './index.ts';
 
 it(
 	'renders and reads pixels through Mesa surfaceless EGL',
 	{ skip: process.platform !== 'darwin' },
 	() => {
-		const result = native.testSurfacelessEgl(16, 16);
+		const result = renderSurfacelessEglFrame(16, 16);
 		const firstPixel = [...result.pixels.subarray(0, 4)];
 
 		assert.strictEqual(result.mode, 'surfaceless-egl');

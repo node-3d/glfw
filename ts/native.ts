@@ -473,45 +473,13 @@ type TNativeMethods = {
 	/** Draws a test scene, used by examples in this package. */
 	testScene: (width?: number, height?: number, z?: number) => void;
 	/**
-	 * Experimental native diagnostics path.
-	 *
-	 * Creates a hidden GLFW window, renders a solid color into an FBO, and reads
-	 * RGBA pixels back from native C++.
+	 * Render one frame with a Mesa surfaceless EGL context.
 	 */
-	testHeadlessFbo: (
+	renderSurfacelessEglFrame: (
 		width?: number,
 		height?: number,
 	) => {
-		mode: string;
-		platform: number;
-		width: number;
-		height: number;
-		status: number;
-		pixels: Buffer;
-		vendor: string;
-		renderer: string;
-		version: string;
-	};
-	testHeadlessFboMode: (
-		mode?: string,
-		width?: number,
-		height?: number,
-	) => {
-		mode: string;
-		platform: number;
-		width: number;
-		height: number;
-		status: number;
-		pixels: Buffer;
-		vendor: string;
-		renderer: string;
-		version: string;
-	};
-	testSurfacelessEgl: (
-		width?: number,
-		height?: number,
-	) => {
-		mode: string;
+		mode: 'surfaceless-egl';
 		width: number;
 		height: number;
 		major: number;

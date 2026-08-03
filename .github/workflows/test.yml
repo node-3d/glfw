@@ -78,7 +78,7 @@ jobs:
           npm_config_arch: ${{ matrix.node_arch }}
           ARCHFLAGS: ${{ matrix.archflags }}
 
-      - name: Install GL Diagnostics - Mac
+      - name: Install Mesa Surfaceless EGL - Mac
         if: matrix.target == 'darwin-x64' || matrix.target == 'darwin-arm64'
         run: bash .github/scripts/setup-macos-gl.sh ${{ matrix.node_arch }}
 
