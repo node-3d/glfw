@@ -5,10 +5,11 @@ import { describe, it } from 'node:test';
 
 type TProbe = Readonly<{
 	name: string;
-	mode: 'raw-auto' | 'raw-manual' | 'window-auto';
+	mode: 'raw-auto' | 'raw-manual' | 'window-auto' | 'window-manual';
 	platform?: 'cocoa' | 'null';
 	context?: 'egl' | 'osmesa';
 	client?: 'opengl' | 'gles';
+	cleanup?: boolean;
 }>;
 
 type TProbeReport = Readonly<{
@@ -141,6 +142,26 @@ try {
 				frame: readCurrentFrame(glfw),
 			},
 		});
+	} else if (probe.mode === 'window-manual') {
+		glfw = await initManual(probe);
+		const mod = await import(process.env.NODE_3D_GLFW_INDEX_URL);
+		wrappedWindow = new mod.GlfwWindow({
+			width: 64,
+			height: 64,
+			title: probe.name,
+			onBeforeWindow(_window, currentGlfw) {
+				setupWindowHints(currentGlfw, probe);
+			},
+		});
+		writeReport({
+			ok: true,
+			details: {
+				version: wrappedWindow.version,
+				framebufferSize: wrappedWindow.framebufferSize,
+				currentContext: !!wrappedWindow.currentContext,
+				frame: readCurrentFrame(glfw),
+			},
+		});
 	} else {
 		throw new Error('Unknown probe mode: ' + probe.mode);
 	}
@@ -148,19 +169,21 @@ try {
 	writeReport({ ok: false, error: asMessage(error) });
 	process.exitCode = 1;
 } finally {
-	try {
-		if (wrappedWindow) {
-			wrappedWindow.destroy();
-		} else if (glfw && window) {
-			glfw.destroyWindow(window);
+	if (probe.cleanup !== false) {
+		try {
+			if (wrappedWindow) {
+				wrappedWindow.destroy();
+			} else if (glfw && window) {
+				glfw.destroyWindow(window);
+			}
+		} catch {
+			// Ignore cleanup errors after failed native probes.
 		}
-	} catch {
-		// Ignore cleanup errors after failed native probes.
-	}
-	try {
-		glfw?.terminate();
-	} catch {
-		// Ignore cleanup errors after failed native probes.
+		try {
+			glfw?.terminate();
+		} catch {
+			// Ignore cleanup errors after failed native probes.
+		}
 	}
 }
 `;
@@ -173,6 +196,14 @@ const platformProbes = (): readonly TProbe[] => {
 				platform: 'null',
 				context: 'egl',
 				client: 'gles',
+			},
+			{
+				name: 'window/manual/null/egl/gles/atexit',
+				mode: 'window-manual',
+				platform: 'null',
+				context: 'egl',
+				client: 'gles',
+				cleanup: false,
 			},
 		];
 	}
