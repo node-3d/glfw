@@ -1,9 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-brew install mesa
+target_arch="${1:-$(node -p 'process.arch')}"
+brew_arch=()
+brew_bin="brew"
 
-mesa_prefix="$(brew --prefix mesa)"
+if [[ "$target_arch" == "x64" ]]; then
+	brew_arch=("arch" "-x86_64")
+	brew_bin="/usr/local/bin/brew"
+
+	if [[ ! -x "$brew_bin" ]]; then
+		echo "[mac-gl] installing x86_64 Homebrew into /usr/local"
+		"${brew_arch[@]}" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	fi
+fi
+
+echo "[mac-gl] target_arch=$target_arch"
+echo "[mac-gl] brew=${brew_arch[*]:-native} $brew_bin"
+"${brew_arch[@]}" "$brew_bin" --version
+"${brew_arch[@]}" "$brew_bin" config
+
+"${brew_arch[@]}" "$brew_bin" install mesa
+
+mesa_prefix="$("${brew_arch[@]}" "$brew_bin" --prefix mesa)"
 runtime_dir="$PWD/.glfw-runtime-lib"
 mkdir -p "$runtime_dir"
 

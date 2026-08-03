@@ -80,7 +80,7 @@ jobs:
 
       - name: Install GL Diagnostics - Mac
         if: matrix.target == 'darwin-x64' || matrix.target == 'darwin-arm64'
-        run: bash .github/scripts/setup-macos-gl.sh
+        run: bash .github/scripts/setup-macos-gl.sh ${{ matrix.node_arch }}
 
       - name: Install OpenGL Compatibility Pack - Windows ARM
         shell: pwsh
