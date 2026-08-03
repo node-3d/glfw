@@ -232,6 +232,11 @@ const runProbe = (probe: TProbe): string | null => {
 	const report = readReport(stdout);
 
 	if (child.status === 0 && report?.ok) {
+		const glfwErrors = extractGlfwErrors(`${stdout}\n${stderr}`);
+		if (glfwErrors.length > 0) {
+			return `${probe.name}: ${glfwErrors.join(' | ')}`;
+		}
+
 		console.log(`[glfw] ok ${probe.name}: ${JSON.stringify(report.details)}`);
 		return null;
 	}
