@@ -10,20 +10,6 @@ createLogger({ name: 'glfw' });
 
 const nodeGlobal = globalThis as unknown as { __isGlfwInited?: boolean };
 
-export type TSurfacelessEglFrame = Readonly<{
-	mode: 'surfaceless-egl';
-	width: number;
-	height: number;
-	major: number;
-	minor: number;
-	surfaceless: boolean;
-	pixels: Buffer;
-	vendor: string;
-	renderer: string;
-	version: string;
-	clientExtensions: string;
-}>;
-
 // Initialize GLFW
 if (!nodeGlobal.__isGlfwInited) {
 	if (!native.init()) {
@@ -41,12 +27,3 @@ if (!nodeGlobal.__isGlfwInited) {
  * Use `GlfwWindow` for a native window wrapper. Browser-style wrappers live in @node-3d/core.
  */
 export const glfw = native;
-
-/**
- * Render one RGBA frame through Mesa surfaceless EGL and return the pixels.
- *
- * This is the non-window OpenGL path used by macOS CI where Cocoa/NSGL windows
- * are unavailable on GitHub-hosted runners.
- */
-export const renderSurfacelessEglFrame = (width = 64, height = 64): TSurfacelessEglFrame =>
-	native.renderSurfacelessEglFrame(width, height);

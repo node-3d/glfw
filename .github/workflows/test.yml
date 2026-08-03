@@ -109,4 +109,4 @@ jobs:
       - name: Run Unit Tests - Mac
         if: matrix.target == 'darwin-x64' || matrix.target == 'darwin-arm64'
         timeout-minutes: 5
-        run: node --test "ts/glfw.test.ts" "ts/surfaceless-egl.test.ts"
+        run: node --test "ts/glfw.test.ts" "ts/runtime-window.test.ts"

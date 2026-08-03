@@ -8,6 +8,7 @@ type TProbe = Readonly<{
 	mode: 'raw-auto' | 'raw-manual' | 'window-auto';
 	platform?: 'cocoa' | 'null';
 	context?: 'egl' | 'osmesa';
+	client?: 'opengl' | 'gles';
 }>;
 
 type TProbeReport = Readonly<{
@@ -45,6 +46,12 @@ const setupWindowHints = (glfw, probe) => {
 	} else if (probe.context === 'osmesa') {
 		glfw.windowHint(glfw.CONTEXT_CREATION_API, glfw.OSMESA_CONTEXT_API);
 	}
+
+	if (probe.client === 'gles') {
+		glfw.windowHint(glfw.CLIENT_API, glfw.OPENGL_ES_API);
+		glfw.windowHint(glfw.CONTEXT_VERSION_MAJOR, 3);
+		glfw.windowHint(glfw.CONTEXT_VERSION_MINOR, 0);
+	}
 };
 
 const initManual = async (probe) => {
@@ -70,6 +77,19 @@ const createRawWindow = (glfw, probe) => {
 	return window;
 };
 
+const readCurrentFrame = (glfw) => {
+	const frame = glfw.testCurrentContextFrame(16, 16);
+	const firstPixel = [...frame.pixels.subarray(0, 4)];
+	if (firstPixel.join(',') !== '255,0,0,255') {
+		throw new Error('Unexpected first pixel: ' + firstPixel.join(','));
+	}
+	return {
+		...frame,
+		pixels: undefined,
+		firstPixel,
+	};
+};
+
 const probe = JSON.parse(process.env.NODE_3D_GLFW_PROBE);
 let glfw = null;
 let window = null;
@@ -86,6 +106,7 @@ try {
 				platform: glfw.getPlatform(),
 				framebufferSize: glfw.getFramebufferSize(window),
 				currentContext: !!glfw.getCurrentContext(window),
+				frame: readCurrentFrame(glfw),
 			},
 		});
 	} else if (probe.mode === 'raw-manual') {
@@ -97,6 +118,7 @@ try {
 				platform: glfw.getPlatform(),
 				framebufferSize: glfw.getFramebufferSize(window),
 				currentContext: !!glfw.getCurrentContext(window),
+				frame: readCurrentFrame(glfw),
 			},
 		});
 	} else if (probe.mode === 'window-auto') {
@@ -116,6 +138,7 @@ try {
 				version: wrappedWindow.version,
 				framebufferSize: wrappedWindow.framebufferSize,
 				currentContext: !!wrappedWindow.currentContext,
+				frame: readCurrentFrame(glfw),
 			},
 		});
 	} else {
@@ -142,23 +165,22 @@ try {
 }
 `;
 const platformProbes = (): readonly TProbe[] => {
+	if (process.platform === 'darwin') {
+		return [
+			{
+				name: 'raw/manual/null/egl/gles',
+				mode: 'raw-manual',
+				platform: 'null',
+				context: 'egl',
+				client: 'gles',
+			},
+		];
+	}
+
 	const probes: TProbe[] = [
 		{ name: 'raw/auto/default', mode: 'raw-auto' },
 		{ name: 'window/auto/default', mode: 'window-auto' },
 	];
-
-	if (process.platform === 'darwin') {
-		probes.push(
-			{ name: 'raw/manual/cocoa', mode: 'raw-manual', platform: 'cocoa' },
-			{
-				name: 'raw/manual/null/osmesa',
-				mode: 'raw-manual',
-				platform: 'null',
-				context: 'osmesa',
-			},
-			{ name: 'raw/manual/null/egl', mode: 'raw-manual', platform: 'null', context: 'egl' },
-		);
-	}
 
 	return probes;
 };

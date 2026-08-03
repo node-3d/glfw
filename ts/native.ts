@@ -473,23 +473,18 @@ type TNativeMethods = {
 	/** Draws a test scene, used by examples in this package. */
 	testScene: (width?: number, height?: number, z?: number) => void;
 	/**
-	 * Render one frame with a Mesa surfaceless EGL context.
+	 * Clears and reads pixels from the current GLFW-owned OpenGL context.
 	 */
-	renderSurfacelessEglFrame: (
+	testCurrentContextFrame: (
 		width?: number,
 		height?: number,
 	) => {
-		mode: 'surfaceless-egl';
 		width: number;
 		height: number;
-		major: number;
-		minor: number;
-		surfaceless: boolean;
 		pixels: Buffer;
 		vendor: string;
 		renderer: string;
 		version: string;
-		clientExtensions: string;
 	};
 	/** Draws a test scene that reacts to a joystick. */
 	testJoystick: (

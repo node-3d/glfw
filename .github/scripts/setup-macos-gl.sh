@@ -21,6 +21,15 @@ if [[ "$target_arch" == "x64" ]]; then
 		echo "[mac-gl] installing x86_64 Homebrew into /usr/local"
 		NONINTERACTIVE=1 CI=1 "${brew_arch[@]}" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 	fi
+
+	if [[ "${CI:-}" == "true" ]]; then
+		for name in idle3 idle3.14 pip3 pip3.14 pydoc3 pydoc3.14 python3 python3-config python3.14 python3.14-config; do
+			target="/usr/local/bin/$name"
+			if [[ -L "$target" && "$(readlink "$target")" == /Library/Frameworks/Python.framework/Versions/3.14/bin/* ]]; then
+				rm "$target"
+			fi
+		done
+	fi
 fi
 
 echo "[mac-gl] target_arch=$target_arch"
@@ -79,6 +88,7 @@ find "$mesa_prefix/lib" -maxdepth 1 -type f -name "lib*.dylib" -print -exec file
 	echo "NODE_3D_GLFW_RUNTIME_LIB=$runtime_dir"
 	echo "DYLD_LIBRARY_PATH=$runtime_dir:$mesa_prefix/lib:${DYLD_LIBRARY_PATH:-}"
 	echo "DYLD_FALLBACK_LIBRARY_PATH=$runtime_dir:$mesa_prefix/lib:${DYLD_FALLBACK_LIBRARY_PATH:-}"
+	echo "EGL_PLATFORM=surfaceless"
 	echo "LIBGL_ALWAYS_SOFTWARE=1"
 	echo "MESA_LOADER_DRIVER_OVERRIDE=llvmpipe"
 } >> "$GITHUB_ENV"
