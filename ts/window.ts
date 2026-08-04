@@ -1,5 +1,14 @@
 import { emptyFunction, keyNames, codeNames, extraCodes } from './constants.ts';
 import EventEmitter from 'node:events';
+import {
+	clearIdle,
+	clearIdleLoop,
+	refIdle,
+	setIdle,
+	setIdleLoop,
+	unrefIdle,
+} from '@node-3d/uv-loop';
+import type { TIdleHandle } from '@node-3d/uv-loop';
 import { glfw } from './core.ts';
 import type {
 	TCbField,
@@ -25,6 +34,56 @@ export type TAnimationFrameCallback = (timestamp: number) => void;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
+
+let activeIdleWork = 0;
+const pendingFrames = new Set<TIdleHandle>();
+
+const refGlfwIdleWork = (): void => {
+	if (activeIdleWork++ === 0) {
+		refIdle();
+	}
+};
+
+const unrefGlfwIdleWork = (): void => {
+	if (activeIdleWork === 0) {
+		return;
+	}
+
+	activeIdleWork--;
+	if (activeIdleWork === 0) {
+		unrefIdle();
+	}
+};
+
+const scheduleGlfwFrame = (callback: () => void): TIdleHandle => {
+	const frame: { handle: TIdleHandle | null } = { handle: null };
+	refGlfwIdleWork();
+	const handle = setIdle(() => {
+		if (frame.handle === null || !pendingFrames.delete(frame.handle)) {
+			return;
+		}
+
+		try {
+			return callback();
+		} finally {
+			unrefGlfwIdleWork();
+		}
+	});
+	frame.handle = handle;
+	pendingFrames.add(handle);
+	return handle;
+};
+
+const cancelGlfwFrame = (handle: TIdleHandle | null | undefined): void => {
+	if (handle === null || handle === undefined) {
+		return;
+	}
+
+	if (pendingFrames.delete(handle)) {
+		unrefGlfwIdleWork();
+	}
+	clearIdle(handle);
+};
 
 export type TWindowOpts = Readonly<
 	Partial<{
@@ -85,19 +144,26 @@ export class GlfwWindow extends EventEmitter {
 		this._readContextAttributes();
 		this._bindStateEvents();
 
-		this.frame = (cb) => setImmediate(() => glfw.drawWindow(this._window, cb));
+		this.frame = (cb) => scheduleGlfwFrame(() => glfw.drawWindow(this._window, cb));
 
 		this.loop = (cb) => {
-			let next: NodeJS.Immediate | null = null;
-			const loopFunc = () => {
-				glfw.drawWindow(this._window, cb);
-				next = setImmediate(loopFunc);
-			};
-			next = setImmediate(loopFunc);
-			return () => {
-				if (next) {
-					clearImmediate(next);
+			let isRunning = true;
+			refGlfwIdleWork();
+			const handle = setIdleLoop(() => {
+				if (!isRunning) {
+					return;
 				}
+
+				glfw.drawWindow(this._window, cb);
+			});
+
+			return () => {
+				if (!isRunning) {
+					return;
+				}
+				isRunning = false;
+				clearIdleLoop(handle);
+				unrefGlfwIdleWork();
 			};
 		};
 
@@ -564,12 +630,17 @@ export class GlfwWindow extends EventEmitter {
 		glfw.setCursorPos(this._window, x, y);
 	}
 
+	/** Cancel a single-frame draw scheduled by `frame`. */
+	public cancelFrame(handle: TIdleHandle | null | undefined): void {
+		cancelGlfwFrame(handle);
+	}
+
 	/**
-	 * Bound optimized single-frame method, returns a timer id.
+	 * Bound optimized single-frame method, returns an idle handle.
 	 *
-	 * Direct one-shot native draw call, scheduled through `setImmediate`.
+	 * Direct one-shot native draw call, scheduled through `@node-3d/uv-loop`.
 	 */
-	public frame: (callback: TAnimationFrameCallback) => NodeJS.Immediate;
+	public frame: (callback: TAnimationFrameCallback) => TIdleHandle;
 
 	/**
 	 * Bound optimized loop method that continuously generates frames with `callback`.
