@@ -1,13 +1,6 @@
 import { emptyFunction, keyNames, codeNames, extraCodes } from './constants.ts';
 import EventEmitter from 'node:events';
-import {
-	clearIdle,
-	clearIdleLoop,
-	refIdle,
-	setIdle,
-	setIdleLoop,
-	unrefIdle,
-} from '@node-3d/uv-loop';
+import { clearIdle, clearIdleLoop, setIdle, setIdleLoop } from '@node-3d/uv-loop';
 import type { TIdleHandle } from '@node-3d/uv-loop';
 import { glfw } from './core.ts';
 import type {
@@ -34,56 +27,6 @@ export type TAnimationFrameCallback = (timestamp: number) => void;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
-
-let activeIdleWork = 0;
-const pendingFrames = new Set<TIdleHandle>();
-
-const refGlfwIdleWork = (): void => {
-	if (activeIdleWork++ === 0) {
-		refIdle();
-	}
-};
-
-const unrefGlfwIdleWork = (): void => {
-	if (activeIdleWork === 0) {
-		return;
-	}
-
-	activeIdleWork--;
-	if (activeIdleWork === 0) {
-		unrefIdle();
-	}
-};
-
-const scheduleGlfwFrame = (callback: () => void): TIdleHandle => {
-	const frame: { handle: TIdleHandle | null } = { handle: null };
-	refGlfwIdleWork();
-	const handle = setIdle(() => {
-		if (frame.handle === null || !pendingFrames.delete(frame.handle)) {
-			return;
-		}
-
-		try {
-			return callback();
-		} finally {
-			unrefGlfwIdleWork();
-		}
-	});
-	frame.handle = handle;
-	pendingFrames.add(handle);
-	return handle;
-};
-
-const cancelGlfwFrame = (handle: TIdleHandle | null | undefined): void => {
-	if (handle === null || handle === undefined) {
-		return;
-	}
-
-	if (pendingFrames.delete(handle)) {
-		unrefGlfwIdleWork();
-	}
-	clearIdle(handle);
-};
 
 export type TWindowOpts = Readonly<
 	Partial<{
@@ -144,11 +87,10 @@ export class GlfwWindow extends EventEmitter {
 		this._readContextAttributes();
 		this._bindStateEvents();
 
-		this.frame = (cb) => scheduleGlfwFrame(() => glfw.drawWindow(this._window, cb));
+		this.frame = (cb) => setIdle(() => glfw.drawWindow(this._window, cb));
 
 		this.loop = (cb) => {
 			let isRunning = true;
-			refGlfwIdleWork();
 			const handle = setIdleLoop(() => {
 				if (!isRunning) {
 					return;
@@ -163,7 +105,6 @@ export class GlfwWindow extends EventEmitter {
 				}
 				isRunning = false;
 				clearIdleLoop(handle);
-				unrefGlfwIdleWork();
 			};
 		};
 
@@ -632,7 +573,7 @@ export class GlfwWindow extends EventEmitter {
 
 	/** Cancel a single-frame draw scheduled by `frame`. */
 	public cancelFrame(handle: TIdleHandle | null | undefined): void {
-		cancelGlfwFrame(handle);
+		clearIdle(handle);
 	}
 
 	/**

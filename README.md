@@ -20,6 +20,7 @@ npm install @node-3d/glfw
 * Multiple windows for a single **Node.js** process.
 * Able to switch to fullscreen and back.
 * Provides `GlfwWindow`, a native GLFW window wrapper for direct window/control work.
+* Uses `@node-3d/uv-loop` for frame and loop scheduling.
 * Keeps legacy `Window` and `Document` classes for compatibility with older code.
 * Leaves browser-like `Window`/`Document`/canvas behavior to
   [@node-3d/core](https://github.com/node-3d/core).
@@ -42,9 +43,12 @@ wnd.loop(() => {
 });
 ```
 
-> Note: this **addon uses N-API**, and therefore is ABI-compatible across different
-Node.js versions. Addon binaries are precompiled and **there is no compilation**
-step during the `npm install` command.
+> Note: this **addon uses N-API**, and therefore its GLFW binary is ABI-compatible
+across different Node.js versions. Frame scheduling depends on
+`@node-3d/uv-loop`, which ships Node-major-specific binaries because it calls
+Node's embedded libuv directly. Addon binaries are precompiled and **there is no
+compilation** step during the `npm install` command when matching archives are
+available.
 
 Prebuilt addon binaries are provided for Windows x64/ARM64, Linux x64/ARM64,
 and macOS x64/ARM64.
@@ -118,6 +122,11 @@ This class manages native window objects and their events. It can also switch be
 fullscreen, borderless and windowed modes. It does not implement browser
 `requestAnimationFrame` or document/canvas compatibility.
 
+`frame()` and `loop()` are scheduled through `@node-3d/uv-loop` instead of a
+recursive `setImmediate` loop. The scheduling target is maximum frame pacing
+stability for native rendering; use vsync or application-level timing checks
+when slower updates are needed.
+
 The first window creates an additional invisible root-window for context sharing
 (so that you can also close any window and still keep the root context).
 The platform context (pointers/handles) for sharing may be obtained when necessary.
@@ -127,6 +136,9 @@ See [`ts/window.ts`](ts/window.ts) for more details.
 Legacy `Window` remains available as a subclass with `requestAnimationFrame` and
 `cancelAnimationFrame`. New browser-style code should use `BrowserWindow` from
 `@node-3d/core`.
+
+Use [`examples/perf.ts`](examples/perf.ts) with `--scheduler=idle` or
+`--scheduler=immediate` when comparing visual frame pacing behavior.
 
 ----------
 
