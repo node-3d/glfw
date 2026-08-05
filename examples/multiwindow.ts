@@ -1,4 +1,5 @@
 import { GlfwWindow, glfw } from '@node-3d/glfw';
+import { refIdle, setIdleLoop } from '@node-3d/uv-loop';
 
 const windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
 	const w = new GlfwWindow({
@@ -34,15 +35,15 @@ const loopFunc = () => {
 		w.drawWindow(render);
 	}
 
-	setImmediate(loopFunc);
-
 	frames++;
 	const time = Date.now();
-	if (time >= prevTime + 2000) {
+	if (time >= prevTime + 5000) {
 		console.log('FPS:', Math.floor((frames * 1000) / (time - prevTime)), 'Events:', events);
 		prevTime = time;
 		frames = 0;
 		events = 0;
 	}
 };
-setImmediate(loopFunc);
+
+refIdle();
+setIdleLoop(loopFunc);
