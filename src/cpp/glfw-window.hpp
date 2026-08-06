@@ -14,10 +14,11 @@ struct WinState {
 	GLFWwindow *window;
 	Napi::ObjectReference emitter;
 	Napi::AsyncContext context;
+	int swapInterval;
 
 	WinState(GLFWwindow *_window, Napi::Object _emitter)
 	    : mouseX(0), mouseY(0), pendingKey(0), pendingScan(0), pendingAction(0), pendingMods(0),
-	      window(_window), context(_emitter.Env(), "GLFWEvent") {
+	      window(_window), context(_emitter.Env(), "GLFWEvent"), swapInterval(0) {
 		emitter.Reset(_emitter, 1);
 	}
 

@@ -16,6 +16,7 @@ import type {
 	TPos,
 	TRect,
 	TSize,
+	TSwapInterval,
 	TNativeEmitter,
 	TWindowHandle,
 	TWindowMode,
@@ -24,9 +25,19 @@ import type {
 // oxlint-disable max-lines
 
 export type TAnimationFrameCallback = (timestamp: number) => void;
+export type TSwapIntervalValue = Exclude<TSwapInterval, boolean>;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
+const DEFAULT_VSYNC_SWAP_INTERVAL = -2;
+
+const toSwapInterval = (value: TSwapInterval | null | undefined): number => {
+	if (typeof value === 'number') {
+		return value;
+	}
+
+	return value ? DEFAULT_VSYNC_SWAP_INTERVAL : 0;
+};
 
 export type TWindowOpts = Readonly<
 	Partial<{
@@ -40,8 +51,19 @@ export type TWindowOpts = Readonly<
 		height: number;
 		/** Display id to open the window on. Default is 0. */
 		display: number;
-		/** Whether vsync should be used. Default is false. */
-		vsync: boolean;
+		/**
+		 * Whether vsync should be used. Default is false.
+		 *
+		 * `true` uses Node3D's platform-preferred swap interval. Numbers are
+		 * passed to the native swap interval policy. `-1` requests adaptive
+		 * vsync when the current context supports it. `-2` uses Windows
+		 * DWM-flush presentation for windowed/borderless windows, falling back
+		 * to adaptive vsync for real fullscreen and supported non-Windows
+		 * platforms.
+		 */
+		vsync: TSwapInterval;
+		/** Explicit GLFW swap interval. Overrides `vsync` when provided. */
+		swapInterval: TSwapIntervalValue;
 		/** Whether fullscreen windows should iconify automatically on focus loss. Default is true. */
 		autoIconify: boolean;
 		/** Window display mode. Default is 'windowed'. */
@@ -553,14 +575,22 @@ export class GlfwWindow extends EventEmitter {
 	public get vsync(): number {
 		return this._vsync;
 	}
-	public set vsync(isVsyncEnabled: number) {
-		if (this._vsync === isVsyncEnabled) {
+	public set vsync(value: TSwapInterval) {
+		const interval = toSwapInterval(value);
+		if (this._vsync === interval) {
 			return;
 		}
 
-		this._vsync = isVsyncEnabled;
+		this._vsync = interval;
 		this.makeCurrent();
 		glfw.swapInterval(this._vsync);
+	}
+
+	public get swapInterval(): number {
+		return this._vsync;
+	}
+	public set swapInterval(interval: TSwapIntervalValue) {
+		this.vsync = interval;
 	}
 
 	/** Cursor position coordinates. */
@@ -873,7 +903,7 @@ export class GlfwWindow extends EventEmitter {
 		this._monitors = glfw.getMonitors();
 		this._primaryDisplay = this._monitors.find((d) => d.is_primary) || null;
 
-		this._vsync = opts.vsync ? 1 : 0; // 0 for vsync off
+		this._vsync = toSwapInterval(opts.swapInterval ?? opts.vsync);
 		this._autoIconify = opts.autoIconify !== false;
 
 		if (opts.decorated !== undefined) {

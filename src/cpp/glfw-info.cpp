@@ -1,8 +1,61 @@
 #include "glfw-common.hpp"
 #include "glfw-info.hpp"
+#include "glfw-window.hpp"
 
 
 namespace glfw {
+
+constexpr int REQUEST_ADAPTIVE_SWAP_INTERVAL = -1;
+constexpr int REQUEST_DWM_FLUSH_SWAP_INTERVAL = -2;
+
+bool isNegativeSwapIntervalSupported() {
+	return glfwExtensionSupported("WGL_EXT_swap_control_tear") == GLFW_TRUE ||
+	    glfwExtensionSupported("GLX_EXT_swap_control_tear") == GLFW_TRUE;
+}
+
+
+int resolveAdaptiveSwapInterval() {
+	return isNegativeSwapIntervalSupported() ? REQUEST_ADAPTIVE_SWAP_INTERVAL : 1;
+}
+
+
+int resolveSwapInterval(int interval) {
+#ifdef _WIN32
+	if (interval == REQUEST_DWM_FLUSH_SWAP_INTERVAL) {
+		GLFWwindow *window = glfwGetCurrentContext();
+		if (window && glfwGetWindowMonitor(window)) {
+			return resolveAdaptiveSwapInterval();
+		}
+
+		return 0;
+	}
+#else
+	if (interval == REQUEST_DWM_FLUSH_SWAP_INTERVAL) {
+		return resolveAdaptiveSwapInterval();
+	}
+#endif
+
+	if (interval == REQUEST_ADAPTIVE_SWAP_INTERVAL && !isNegativeSwapIntervalSupported()) {
+		return 1;
+	}
+
+	return interval;
+}
+
+
+void rememberSwapInterval(int interval) {
+	GLFWwindow *window = glfwGetCurrentContext();
+	if (!window) {
+		return;
+	}
+
+	auto *state = reinterpret_cast<WinState *>(glfwGetWindowUserPointer(window));
+	if (!state) {
+		return;
+	}
+
+	state->swapInterval = interval;
+}
 
 DBG_EXPORT JS_METHOD(getError) {
 	NAPI_ENV;
@@ -43,7 +96,8 @@ DBG_EXPORT JS_METHOD(swapInterval) {
 	NAPI_ENV;
 	REQ_INT32_ARG(0, interval);
 
-	glfwSwapInterval(interval);
+	rememberSwapInterval(interval);
+	glfwSwapInterval(resolveSwapInterval(interval));
 	RET_GLFW_VOID;
 }
 

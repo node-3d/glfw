@@ -11,6 +11,7 @@ export type {
 	TCbVoid,
 	THandle,
 	TWindowHandle,
+	TSwapInterval,
 	TSize,
 	TPos,
 	TFrameSize,

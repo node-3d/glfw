@@ -23,6 +23,7 @@ const windowProperties = [
 	'currentContext',
 	'cursorPos',
 	'vsync',
+	'swapInterval',
 ] as const;
 
 const windowMethods = [

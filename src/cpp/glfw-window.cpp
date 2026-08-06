@@ -10,6 +10,8 @@
 
 namespace glfw {
 
+constexpr int REQUEST_DWM_FLUSH_PRESENT_INTERVAL = -2;
+
 std::vector<WinState *> states;
 
 // Cached visibility hint value
@@ -23,6 +25,47 @@ GLFWwindow *_share = nullptr;
 static inline double getTimestamp() {
 	return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch())
 	    .count();
+}
+
+
+#ifdef _WIN32
+using DwmFlushFn = HRESULT(WINAPI *)();
+
+static inline DwmFlushFn getDwmFlush() {
+	static HMODULE module = LoadLibraryA("dwmapi.dll");
+	static DwmFlushFn fn =
+	    module ? reinterpret_cast<DwmFlushFn>(GetProcAddress(module, "DwmFlush")) : nullptr;
+	return fn;
+}
+#endif
+
+
+static inline bool isDwmFlushInterval(GLFWwindow *window) {
+#ifdef _WIN32
+	auto *state = reinterpret_cast<WinState *>(glfwGetWindowUserPointer(window));
+	return state && state->swapInterval == REQUEST_DWM_FLUSH_PRESENT_INTERVAL &&
+	    !glfwGetWindowMonitor(window);
+#else
+	return false;
+#endif
+}
+
+
+static inline void flushDwmIfNeeded(GLFWwindow *window) {
+#ifdef _WIN32
+	if (!isDwmFlushInterval(window)) {
+		return;
+	}
+
+	DwmFlushFn dwmFlush = getDwmFlush();
+	if (!dwmFlush) {
+		return;
+	}
+
+	dwmFlush();
+#else
+	(void)window;
+#endif
 }
 
 
@@ -503,6 +546,7 @@ DBG_EXPORT JS_METHOD(drawWindow) {
 	cb.Call(1, args);
 
 	glfwSwapBuffers(window);
+	flushDwmIfNeeded(window);
 
 	RET_GLFW_VOID;
 }

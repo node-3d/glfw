@@ -124,8 +124,38 @@ fullscreen, borderless and windowed modes. It does not implement browser
 
 `frame()` and `loop()` are scheduled through `@node-3d/uv-loop` instead of a
 recursive `setImmediate` loop. The scheduling target is maximum frame pacing
-stability for native rendering; use vsync or application-level timing checks
-when slower updates are needed.
+stability for native rendering; use vsync, numeric swap intervals, or
+application-level timing checks when slower updates are needed.
+
+`vsync: true` uses Node3D's platform-preferred swap interval policy and
+`vsync: false` maps to `glfwSwapInterval(0)`. For direct presentation
+experiments, pass a number through `vsync` or use the clearer `swapInterval`
+option/property:
+
+```ts
+const wnd = new GlfwWindow({ title: 'GLFW Test', swapInterval: 1 });
+
+wnd.swapInterval = 0;
+```
+
+`swapInterval: -1` requests adaptive vsync when the current context supports
+`WGL_EXT_swap_control_tear` or `GLX_EXT_swap_control_tear`; otherwise it falls
+back to `1`. `swapInterval: -2` is a Node3D sentinel for platform-preferred
+presentation. `vsync: true` currently maps to `-2`.
+
+| Request | Platform | Window mode | Native behavior |
+| --- | --- | --- | --- |
+| `false` / `0` | all | all | `glfwSwapInterval(0)` |
+| `true` / `-2` | Windows | windowed or borderless | `glfwSwapInterval(0)`, then native `DwmFlush()` after each buffer swap |
+| `true` / `-2` | Windows | real fullscreen | adaptive `-1` when `WGL_EXT_swap_control_tear` is supported, otherwise `1` |
+| `true` / `-2` | Linux | all | adaptive `-1` when `GLX_EXT_swap_control_tear` is supported, otherwise `1` |
+| `true` / `-2` | macOS | all | `1` |
+| `-1` | Windows/Linux | all | adaptive `-1` when the matching tear extension is supported, otherwise `1` |
+| `1` | all | all | raw `glfwSwapInterval(1)` |
+
+Use `swapInterval: 1` when you need raw GLFW vsync explicitly. Use
+`swapInterval: -1` to test adaptive swap-control directly. Use `vsync: true` for
+Node3D's current platform-preferred behavior.
 
 The first window creates an additional invisible root-window for context sharing
 (so that you can also close any window and still keep the root context).
