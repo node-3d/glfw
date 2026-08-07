@@ -10,8 +10,6 @@
 
 namespace glfw {
 
-constexpr int REQUEST_DWM_FLUSH_PRESENT_INTERVAL = -2;
-
 std::vector<WinState *> states;
 
 // Cached visibility hint value
@@ -28,44 +26,140 @@ static inline double getTimestamp() {
 }
 
 
-#ifdef _WIN32
-using DwmFlushFn = HRESULT(WINAPI *)();
-
-static inline DwmFlushFn getDwmFlush() {
-	static HMODULE module = LoadLibraryA("dwmapi.dll");
-	static DwmFlushFn fn =
-	    module ? reinterpret_cast<DwmFlushFn>(GetProcAddress(module, "DwmFlush")) : nullptr;
-	return fn;
+static inline double getTimestamp(std::chrono::steady_clock::time_point timestamp) {
+	return std::chrono::duration<double, std::milli>(timestamp.time_since_epoch()).count();
 }
-#endif
 
 
-static inline bool isDwmFlushInterval(GLFWwindow *window) {
-#ifdef _WIN32
+static inline bool isSoftwarePacedInterval(GLFWwindow *window) {
 	auto *state = reinterpret_cast<WinState *>(glfwGetWindowUserPointer(window));
-	return state && state->swapInterval == REQUEST_DWM_FLUSH_PRESENT_INTERVAL &&
-	    !glfwGetWindowMonitor(window);
-#else
-	return false;
-#endif
+	return state && state->isSoftwarePaced;
 }
 
 
-static inline void flushDwmIfNeeded(GLFWwindow *window) {
-#ifdef _WIN32
-	if (!isDwmFlushInterval(window)) {
+static inline GLFWmonitor *getWindowDisplayMonitor(GLFWwindow *window) {
+	GLFWmonitor *fullscreenMonitor = glfwGetWindowMonitor(window);
+	if (fullscreenMonitor) {
+		return fullscreenMonitor;
+	}
+
+	int wx;
+	int wy;
+	int ww;
+	int wh;
+	glfwGetWindowPos(window, &wx, &wy);
+	glfwGetWindowSize(window, &ww, &wh);
+
+	int monitorCount;
+	GLFWmonitor **monitors = glfwGetMonitors(&monitorCount);
+	GLFWmonitor *bestMonitor = nullptr;
+	int bestArea = 0;
+
+	for (int i = 0; i < monitorCount; i++) {
+		int mx;
+		int my;
+		glfwGetMonitorPos(monitors[i], &mx, &my);
+
+		const GLFWvidmode *mode = glfwGetVideoMode(monitors[i]);
+		if (!mode) {
+			continue;
+		}
+
+		int overlapWidth = std::max(0, std::min(wx + ww, mx + mode->width) - std::max(wx, mx));
+		int overlapHeight = std::max(0, std::min(wy + wh, my + mode->height) - std::max(wy, my));
+		int area = overlapWidth * overlapHeight;
+
+		if (area > bestArea) {
+			bestArea = area;
+			bestMonitor = monitors[i];
+		}
+	}
+
+	return bestMonitor ? bestMonitor : glfwGetPrimaryMonitor();
+}
+
+
+static inline int getWindowDisplayRefreshRate(GLFWwindow *window) {
+	GLFWmonitor *monitor = getWindowDisplayMonitor(window);
+	if (!monitor) {
+		return 60;
+	}
+
+	const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+	if (!mode || mode->refreshRate <= 0) {
+		return 60;
+	}
+
+	return mode->refreshRate;
+}
+
+
+DBG_EXPORT void updateWindowRefreshRate(GLFWwindow *window) {
+	auto *state = reinterpret_cast<WinState *>(glfwGetWindowUserPointer(window));
+	if (!state) {
 		return;
 	}
 
-	DwmFlushFn dwmFlush = getDwmFlush();
-	if (!dwmFlush) {
-		return;
+	state->refreshRate = getWindowDisplayRefreshRate(window);
+}
+
+
+static inline bool queryNegativeSwapIntervalSupported() {
+	if (!glfwGetCurrentContext()) {
+		return false;
 	}
 
-	dwmFlush();
-#else
-	(void)window;
-#endif
+	return glfwExtensionSupported("WGL_EXT_swap_control_tear") == GLFW_TRUE ||
+	    glfwExtensionSupported("GLX_EXT_swap_control_tear") == GLFW_TRUE;
+}
+
+
+DBG_EXPORT bool shouldRenderFrame(GLFWwindow *window) {
+	auto *state = reinterpret_cast<WinState *>(glfwGetWindowUserPointer(window));
+	if (!state) {
+		return true;
+	}
+
+	if (!isSoftwarePacedInterval(window)) {
+		return true;
+	}
+
+	auto now = std::chrono::steady_clock::now();
+	auto period = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+	    std::chrono::duration<double, std::milli>(1000.0 / state->refreshRate)
+	);
+
+	if (state->nextFrameStartedAt == std::chrono::steady_clock::time_point::min()) {
+		state->frameTimestampAt = now;
+		state->nextFrameStartedAt = now + period;
+		return true;
+	}
+
+	if (now < state->nextFrameStartedAt) {
+		return false;
+	}
+
+	auto targetFrameStartedAt = state->nextFrameStartedAt;
+	state->frameTimestampAt += period;
+
+	if (now - targetFrameStartedAt > period) {
+		state->nextFrameStartedAt = now + period;
+	} else {
+		state->nextFrameStartedAt = targetFrameStartedAt + period;
+	}
+
+	return true;
+}
+
+
+static inline double getFrameTimestamp(GLFWwindow *window) {
+	auto *state = reinterpret_cast<WinState *>(glfwGetWindowUserPointer(window));
+	if (!state || !state->isSoftwarePaced ||
+	    state->frameTimestampAt == std::chrono::steady_clock::time_point::min()) {
+		return getTimestamp();
+	}
+
+	return getTimestamp(state->frameTimestampAt);
 }
 
 
@@ -202,9 +296,10 @@ DBG_EXPORT JS_METHOD(createWindow) {
 	emitter.Set("__key", JS_OBJECT);
 
 	// Store WinState as user pointer
-	WinState *state = new WinState(window, emitter);
+	WinState *state = new WinState(window, emitter, queryNegativeSwapIntervalSupported());
 	states.push_back(state);
 	glfwSetWindowUserPointer(window, state);
+	updateWindowRefreshRate(window);
 
 
 	// Window callbacks
@@ -355,6 +450,7 @@ DBG_EXPORT JS_METHOD(setWindowSize) {
 	REQ_UINT32_ARG(2, h);
 
 	glfwSetWindowSize(window, w, h);
+	updateWindowRefreshRate(window);
 	RET_GLFW_VOID;
 }
 
@@ -390,6 +486,7 @@ DBG_EXPORT JS_METHOD(setWindowPos) {
 	REQ_INT32_ARG(2, y);
 
 	glfwSetWindowPos(window, x, y);
+	updateWindowRefreshRate(window);
 	RET_GLFW_VOID;
 }
 
@@ -540,13 +637,17 @@ DBG_EXPORT JS_METHOD(drawWindow) {
 	THIS_WINDOW;
 	REQ_FUN_ARG(1, cb);
 
+	if (!shouldRenderFrame(window)) {
+		RET_GLFW_VOID;
+	}
+
 	glfwPollEvents();
 
-	napi_value args[1] = { JS_NUM(getTimestamp()) };
+	double timestamp = getFrameTimestamp(window);
+	napi_value args[1] = { JS_NUM(timestamp) };
 	cb.Call(1, args);
 
 	glfwSwapBuffers(window);
-	flushDwmIfNeeded(window);
 
 	RET_GLFW_VOID;
 }

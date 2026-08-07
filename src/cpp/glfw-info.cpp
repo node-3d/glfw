@@ -5,38 +5,39 @@
 
 namespace glfw {
 
-constexpr int REQUEST_ADAPTIVE_SWAP_INTERVAL = -1;
-constexpr int REQUEST_DWM_FLUSH_SWAP_INTERVAL = -2;
+constexpr int REQUEST_NEGATIVE_SWAP_INTERVAL = -1;
+constexpr int REQUEST_VSYNC_SWAP_INTERVAL = 1;
 
-bool isNegativeSwapIntervalSupported() {
-	return glfwExtensionSupported("WGL_EXT_swap_control_tear") == GLFW_TRUE ||
-	    glfwExtensionSupported("GLX_EXT_swap_control_tear") == GLFW_TRUE;
-}
-
-
-int resolveAdaptiveSwapInterval() {
-	return isNegativeSwapIntervalSupported() ? REQUEST_ADAPTIVE_SWAP_INTERVAL : 1;
-}
-
-
-int resolveSwapInterval(int interval) {
-#ifdef _WIN32
-	if (interval == REQUEST_DWM_FLUSH_SWAP_INTERVAL) {
-		GLFWwindow *window = glfwGetCurrentContext();
-		if (window && glfwGetWindowMonitor(window)) {
-			return resolveAdaptiveSwapInterval();
-		}
-
+int normalizeSwapInterval(int interval) {
+	if (interval == 0) {
 		return 0;
 	}
-#else
-	if (interval == REQUEST_DWM_FLUSH_SWAP_INTERVAL) {
-		return resolveAdaptiveSwapInterval();
-	}
-#endif
 
-	if (interval == REQUEST_ADAPTIVE_SWAP_INTERVAL && !isNegativeSwapIntervalSupported()) {
-		return 1;
+	return interval < 0 ? REQUEST_NEGATIVE_SWAP_INTERVAL : REQUEST_VSYNC_SWAP_INTERVAL;
+}
+
+int resolveSwapInterval(WinState *state, int interval) {
+	interval = normalizeSwapInterval(interval);
+
+	if (!state) {
+		return interval;
+	}
+
+	state->isSoftwarePaced = false;
+
+	if (interval == 0) {
+		return 0;
+	}
+
+	if (interval == REQUEST_NEGATIVE_SWAP_INTERVAL || interval == REQUEST_VSYNC_SWAP_INTERVAL) {
+		state->isSoftwarePaced = true;
+
+		if (interval == REQUEST_NEGATIVE_SWAP_INTERVAL) {
+			return state->isNegativeSwapIntervalSupported ? REQUEST_NEGATIVE_SWAP_INTERVAL
+			                                              : REQUEST_VSYNC_SWAP_INTERVAL;
+		}
+
+		return REQUEST_VSYNC_SWAP_INTERVAL;
 	}
 
 	return interval;
@@ -54,7 +55,10 @@ void rememberSwapInterval(int interval) {
 		return;
 	}
 
-	state->swapInterval = interval;
+	state->swapInterval = normalizeSwapInterval(interval);
+	state->nextFrameStartedAt = std::chrono::steady_clock::time_point::min();
+	state->frameTimestampAt = std::chrono::steady_clock::time_point::min();
+	updateWindowRefreshRate(window);
 }
 
 DBG_EXPORT JS_METHOD(getError) {
@@ -87,6 +91,10 @@ DBG_EXPORT JS_METHOD(getFramebufferSize) {
 DBG_EXPORT JS_METHOD(swapBuffers) {
 	NAPI_ENV;
 	THIS_WINDOW;
+	if (!shouldRenderFrame(window)) {
+		RET_GLFW_VOID;
+	}
+
 	glfwSwapBuffers(window);
 	RET_GLFW_VOID;
 }
@@ -96,8 +104,13 @@ DBG_EXPORT JS_METHOD(swapInterval) {
 	NAPI_ENV;
 	REQ_INT32_ARG(0, interval);
 
-	rememberSwapInterval(interval);
-	glfwSwapInterval(resolveSwapInterval(interval));
+	int normalizedInterval = normalizeSwapInterval(interval);
+
+	rememberSwapInterval(normalizedInterval);
+
+	GLFWwindow *window = glfwGetCurrentContext();
+	auto *state = window ? reinterpret_cast<WinState *>(glfwGetWindowUserPointer(window)) : nullptr;
+	glfwSwapInterval(resolveSwapInterval(state, normalizedInterval));
 	RET_GLFW_VOID;
 }
 

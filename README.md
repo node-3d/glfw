@@ -127,10 +127,9 @@ recursive `setImmediate` loop. The scheduling target is maximum frame pacing
 stability for native rendering; use vsync, numeric swap intervals, or
 application-level timing checks when slower updates are needed.
 
-`vsync: true` uses Node3D's platform-preferred swap interval policy and
-`vsync: false` maps to `glfwSwapInterval(0)`. For direct presentation
-experiments, pass a number through `vsync` or use the clearer `swapInterval`
-option/property:
+`vsync: true` maps to `swapInterval: -1` and `vsync: false` maps to
+`swapInterval: 0`. For direct presentation experiments, pass a number through
+`vsync` or use the clearer `swapInterval` option/property:
 
 ```ts
 const wnd = new GlfwWindow({ title: 'GLFW Test', swapInterval: 1 });
@@ -138,24 +137,21 @@ const wnd = new GlfwWindow({ title: 'GLFW Test', swapInterval: 1 });
 wnd.swapInterval = 0;
 ```
 
-`swapInterval: -1` requests adaptive vsync when the current context supports
-`WGL_EXT_swap_control_tear` or `GLX_EXT_swap_control_tear`; otherwise it falls
-back to `1`. `swapInterval: -2` is a Node3D sentinel for platform-preferred
-presentation. `vsync: true` currently maps to `-2`.
+Swap interval numbers are normalized before they reach GLFW: values below zero
+map to `-1`, values above zero map to `1`, and `0` remains unpaced.
+Non-zero intervals enable Node3D's native frame-start gate and native driver
+sync underneath it. `1` uses `glfwSwapInterval(1)`, while `-1` uses adaptive
+`glfwSwapInterval(-1)` when the window's context reports swap-control tear
+support during creation, otherwise `glfwSwapInterval(1)`.
 
 | Request | Platform | Window mode | Native behavior |
 | --- | --- | --- | --- |
 | `false` / `0` | all | all | `glfwSwapInterval(0)` |
-| `true` / `-2` | Windows | windowed or borderless | `glfwSwapInterval(0)`, then native `DwmFlush()` after each buffer swap |
-| `true` / `-2` | Windows | real fullscreen | adaptive `-1` when `WGL_EXT_swap_control_tear` is supported, otherwise `1` |
-| `true` / `-2` | Linux | all | adaptive `-1` when `GLX_EXT_swap_control_tear` is supported, otherwise `1` |
-| `true` / `-2` | macOS | all | `1` |
-| `-1` | Windows/Linux | all | adaptive `-1` when the matching tear extension is supported, otherwise `1` |
-| `1` | all | all | raw `glfwSwapInterval(1)` |
+| `true` / negative number | all | all | native frame gate plus adaptive `glfwSwapInterval(-1)` when available, otherwise `1` |
+| positive number | all | all | native frame gate plus `glfwSwapInterval(1)` |
 
-Use `swapInterval: 1` when you need raw GLFW vsync explicitly. Use
-`swapInterval: -1` to test adaptive swap-control directly. Use `vsync: true` for
-Node3D's current platform-preferred behavior.
+Use `swapInterval: 0` when you need raw unpaced presentation. Use `vsync: true`
+for Node3D's native frame-gated presentation behavior.
 
 The first window creates an additional invisible root-window for context sharing
 (so that you can also close any window and still keep the root context).
@@ -197,7 +193,8 @@ See [`ts/document.ts`](ts/document.ts) for more details.
 * `glfw.showConsole(): void` - shows the console window if it has been hidden.
 * `glfw.drawWindow(w: number, cb: (timestamp: number) => void): void` - this is a shortcut
     to call `pollEvents`, then `cb`, and then `swapBuffers`. `GlfwWindow#drawWindow`
-    wraps this call and supplies the window handle for you.
+    wraps this call and supplies the window handle for you. For paced non-zero
+    swap intervals, `timestamp` is the scheduled frame time.
 * `glfw.platformDevice(): number` - returns the native display or device handle,
     or whatever is similar on other systems.
 * `glfw.platformWindow(w: number): number` - returns the window HWND on Windows,

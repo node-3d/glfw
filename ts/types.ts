@@ -77,7 +77,7 @@ export type TNativeEmitter = Readonly<{
 	[name: string]: unknown;
 }>;
 
-export type TSwapInterval = boolean | -2 | -1 | 0 | 1;
+export type TSwapInterval = boolean | number;
 
 export type TGamepadState = Readonly<{
 	buttons: readonly number[];

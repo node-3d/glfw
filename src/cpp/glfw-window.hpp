@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include "glfw-common.hpp"
 
 
@@ -15,10 +17,18 @@ struct WinState {
 	Napi::ObjectReference emitter;
 	Napi::AsyncContext context;
 	int swapInterval;
+	int refreshRate;
+	bool isSoftwarePaced;
+	bool isNegativeSwapIntervalSupported;
+	std::chrono::steady_clock::time_point nextFrameStartedAt;
+	std::chrono::steady_clock::time_point frameTimestampAt;
 
-	WinState(GLFWwindow *_window, Napi::Object _emitter)
+	WinState(GLFWwindow *_window, Napi::Object _emitter, bool _isNegativeSwapIntervalSupported)
 	    : mouseX(0), mouseY(0), pendingKey(0), pendingScan(0), pendingAction(0), pendingMods(0),
-	      window(_window), context(_emitter.Env(), "GLFWEvent"), swapInterval(0) {
+	      window(_window), context(_emitter.Env(), "GLFWEvent"), swapInterval(0), refreshRate(60),
+	      isSoftwarePaced(false), isNegativeSwapIntervalSupported(_isNegativeSwapIntervalSupported),
+	      nextFrameStartedAt(std::chrono::steady_clock::time_point::min()),
+	      frameTimestampAt(std::chrono::steady_clock::time_point::min()) {
 		emitter.Reset(_emitter, 1);
 	}
 
@@ -32,6 +42,8 @@ DBG_EXPORT void forEachWindow(const StatesIterator &fn);
 
 DBG_EXPORT void dropShare();
 DBG_EXPORT void destroyAllWindows();
+DBG_EXPORT void updateWindowRefreshRate(GLFWwindow *window);
+DBG_EXPORT bool shouldRenderFrame(GLFWwindow *window);
 
 DBG_EXPORT JS_METHOD(windowHint);
 DBG_EXPORT JS_METHOD(windowHintString);

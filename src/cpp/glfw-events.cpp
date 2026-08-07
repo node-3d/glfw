@@ -132,6 +132,7 @@ void windowPosCB(GLFWwindow *window, int xpos, int ypos) {
 	THIS_STATE;
 	STATE_ENV;
 	NAPI_HS;
+	updateWindowRefreshRate(window);
 
 	Napi::Object evt = JS_OBJECT;
 	evt.Set("type", "move");
@@ -145,6 +146,7 @@ void windowSizeCB(GLFWwindow *window, int w, int h) {
 	THIS_STATE;
 	STATE_ENV;
 	NAPI_HS;
+	updateWindowRefreshRate(window);
 
 	Napi::Object evt = JS_OBJECT;
 	evt.Set("type", "resize");

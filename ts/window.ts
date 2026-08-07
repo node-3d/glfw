@@ -29,14 +29,17 @@ export type TSwapIntervalValue = Exclude<TSwapInterval, boolean>;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
-const DEFAULT_VSYNC_SWAP_INTERVAL = -2;
 
 const toSwapInterval = (value: TSwapInterval | null | undefined): number => {
 	if (typeof value === 'number') {
-		return value;
+		if (value === 0) {
+			return 0;
+		}
+
+		return value < 0 ? -1 : 1;
 	}
 
-	return value ? DEFAULT_VSYNC_SWAP_INTERVAL : 0;
+	return value ? -1 : 0;
 };
 
 export type TWindowOpts = Readonly<
@@ -54,12 +57,11 @@ export type TWindowOpts = Readonly<
 		/**
 		 * Whether vsync should be used. Default is false.
 		 *
-		 * `true` uses Node3D's platform-preferred swap interval. Numbers are
-		 * passed to the native swap interval policy. `-1` requests adaptive
-		 * vsync when the current context supports it. `-2` uses Windows
-		 * DWM-flush presentation for windowed/borderless windows, falling back
-		 * to adaptive vsync for real fullscreen and supported non-Windows
-		 * platforms.
+		 * `true` maps to `-1`; `false` maps to `0`. Numeric values are normalized:
+		 * values below zero map to `-1`, values above zero map to `1`, and `0`
+		 * remains unpaced. Non-zero intervals use Node3D's native frame gate and
+		 * native `glfwSwapInterval(1)` or adaptive `glfwSwapInterval(-1)`
+		 * underneath that gate.
 		 */
 		vsync: TSwapInterval;
 		/** Explicit GLFW swap interval. Overrides `vsync` when provided. */
