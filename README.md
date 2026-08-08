@@ -153,6 +153,12 @@ support during creation, otherwise `glfwSwapInterval(1)`.
 Use `swapInterval: 0` when you need raw unpaced presentation. Use `vsync: true`
 for Node3D's native frame-gated presentation behavior.
 
+The native frame gate controls when render callbacks are emitted, but callbacks
+receive actual monotonic time. It does not feed synthetic fixed-step timestamps
+to application code. Use application-level delta clamping or fixed-step
+simulation when a scene must tolerate rare long pauses without advancing
+physics or animation by the full wall-clock gap.
+
 The first window creates an additional invisible root-window for context sharing
 (so that you can also close any window and still keep the root context).
 The platform context (pointers/handles) for sharing may be obtained when necessary.
@@ -193,8 +199,8 @@ See [`ts/document.ts`](ts/document.ts) for more details.
 * `glfw.showConsole(): void` - shows the console window if it has been hidden.
 * `glfw.drawWindow(w: number, cb: (timestamp: number) => void): void` - this is a shortcut
     to call `pollEvents`, then `cb`, and then `swapBuffers`. `GlfwWindow#drawWindow`
-    wraps this call and supplies the window handle for you. For paced non-zero
-    swap intervals, `timestamp` is the scheduled frame time.
+    wraps this call and supplies the window handle for you. `timestamp` is the
+    actual monotonic callback time, including for paced non-zero swap intervals.
 * `glfw.platformDevice(): number` - returns the native display or device handle,
     or whatever is similar on other systems.
 * `glfw.platformWindow(w: number): number` - returns the window HWND on Windows,

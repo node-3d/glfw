@@ -1,4 +1,4 @@
-// oxlint-disable no-console node/no-sync node/no-process-env
+// oxlint-disable node/no-process-env
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { describe, it } from 'node:test';
@@ -91,6 +91,43 @@ const readCurrentFrame = (glfw) => {
 	};
 };
 
+const readNormalizedKeyEvent = (wrappedWindow, glfw) => {
+	let normalized = null;
+	wrappedWindow.once('keydown', (event) => {
+		normalized = {
+			key: event.key,
+			code: event.code,
+			keyCode: event.keyCode,
+			which: event.which,
+		};
+	});
+
+	wrappedWindow.emit('keydown', {
+		type: 'keydown',
+		repeat: false,
+		altKey: false,
+		ctrlKey: false,
+		metaKey: false,
+		shiftKey: false,
+		code: 'w',
+		key: 'w',
+		which: glfw.KEY_W,
+		charCode: 119,
+	});
+
+	if (
+		!normalized ||
+		normalized.key !== 'w' ||
+		normalized.code !== 'KeyW' ||
+		normalized.keyCode !== 87 ||
+		normalized.which !== 87
+	) {
+		throw new Error('Unexpected normalized key event: ' + JSON.stringify(normalized));
+	}
+
+	return normalized;
+};
+
 const probe = JSON.parse(process.env.NODE_3D_GLFW_PROBE);
 let glfw = null;
 let window = null;
@@ -140,6 +177,7 @@ try {
 				framebufferSize: wrappedWindow.framebufferSize,
 				currentContext: !!wrappedWindow.currentContext,
 				frame: readCurrentFrame(glfw),
+				keyEvent: readNormalizedKeyEvent(wrappedWindow, glfw),
 			},
 		});
 	} else if (probe.mode === 'window-manual') {
@@ -160,6 +198,7 @@ try {
 				framebufferSize: wrappedWindow.framebufferSize,
 				currentContext: !!wrappedWindow.currentContext,
 				frame: readCurrentFrame(glfw),
+				keyEvent: readNormalizedKeyEvent(wrappedWindow, glfw),
 			},
 		});
 	} else {

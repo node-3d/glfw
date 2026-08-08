@@ -152,14 +152,8 @@ DBG_EXPORT bool shouldRenderFrame(GLFWwindow *window) {
 }
 
 
-static inline double getFrameTimestamp(GLFWwindow *window) {
-	auto *state = reinterpret_cast<WinState *>(glfwGetWindowUserPointer(window));
-	if (!state || !state->isSoftwarePaced ||
-	    state->frameTimestampAt == std::chrono::steady_clock::time_point::min()) {
-		return getTimestamp();
-	}
-
-	return getTimestamp(state->frameTimestampAt);
+static inline double getFrameTimestamp(GLFWwindow * /*window*/) {
+	return getTimestamp();
 }
 
 
