@@ -159,6 +159,14 @@ to application code. Use application-level delta clamping or fixed-step
 simulation when a scene must tolerate rare long pauses without advancing
 physics or animation by the full wall-clock gap.
 
+The frame gate also controls event polling. If a paced frame is not due yet,
+`drawWindow()` returns before polling events, running the render callback, or
+swapping buffers. This keeps the hot idle scheduler from polling native window
+events thousands of times per second.
+
+The window refresh rate used by the frame gate is sampled at window creation and
+updated when the window moves, resizes, or changes mode.
+
 The first window creates an additional invisible root-window for context sharing
 (so that you can also close any window and still keep the root context).
 The platform context (pointers/handles) for sharing may be obtained when necessary.
@@ -193,14 +201,27 @@ See [`ts/document.ts`](ts/document.ts) for more details.
 
 ----------
 
+### Events
+
+Keyboard events are normalized toward browser-style fields. GLFW key events keep
+their native `which` value available through the raw event path, while
+`GlfwWindow` normalizes common fields such as `key`, `code`, `keyCode`, and
+`which` so browser-oriented input code can handle keys like WASD and shortcuts
+without GLFW-specific key constants.
+
+----------
+
 ### Extras
 
 * `glfw.hideConsole(): void` - tries to hide the console window on Windows.
 * `glfw.showConsole(): void` - shows the console window if it has been hidden.
-* `glfw.drawWindow(w: number, cb: (timestamp: number) => void): void` - this is a shortcut
-    to call `pollEvents`, then `cb`, and then `swapBuffers`. `GlfwWindow#drawWindow`
-    wraps this call and supplies the window handle for you. `timestamp` is the
-    actual monotonic callback time, including for paced non-zero swap intervals.
+* `glfw.drawWindow(w: number, cb: (timestamp: number) => void): void` - draws
+    one frame when the window's pacing state allows it. Unpaced windows call
+    `pollEvents`, then `cb`, then `swapBuffers` on every invocation. Paced
+    windows can return before those steps when the next frame is not due.
+    `GlfwWindow#drawWindow` wraps this call and supplies the window handle for
+    you. `timestamp` is the actual monotonic callback time, including for paced
+    non-zero swap intervals.
 * `glfw.platformDevice(): number` - returns the native display or device handle,
     or whatever is similar on other systems.
 * `glfw.platformWindow(w: number): number` - returns the window HWND on Windows,

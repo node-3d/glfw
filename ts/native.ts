@@ -431,7 +431,11 @@ type TNativeMethods = {
 	getWindowAttrib: (window: TWindowHandle, attrib: number) => number;
 	setWindowAttrib: (window: TWindowHandle, attrib: number, value: number) => void;
 	/**
-	 * Draw one frame by polling events, calling `callback`, and swapping buffers.
+	 * Draw one frame when window pacing allows it.
+	 *
+	 * Unpaced windows poll events, call `callback`, and swap buffers on every
+	 * invocation. Paced windows can return before those steps when the next
+	 * frame slot is not due.
 	 */
 	drawWindow: (window: TWindowHandle, callback: (time: number) => void) => void;
 	setInputMode: (window: TWindowHandle, mode: number, value: number) => void;
