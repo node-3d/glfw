@@ -5,7 +5,7 @@ import { describe, it } from 'node:test';
 
 type TProbe = Readonly<{
 	name: string;
-	mode: 'raw-auto' | 'raw-manual' | 'window-auto' | 'window-manual';
+	mode: 'document-raf' | 'raw-auto' | 'raw-manual' | 'window-auto' | 'window-manual';
 	platform?: 'cocoa' | 'null';
 	context?: 'egl' | 'osmesa';
 	client?: 'opengl' | 'gles';
@@ -128,6 +128,44 @@ const readNormalizedKeyEvent = (wrappedWindow, glfw) => {
 	return normalized;
 };
 
+const readLegacyDocumentAnimationFrames = async (mod, probe) => {
+	const doc = new mod.Document({
+		width: 64,
+		height: 64,
+		vsync: true,
+		title: probe.name,
+		onBeforeWindow(_window, currentGlfw) {
+			setupWindowHints(currentGlfw, probe);
+		},
+	});
+	let frames = 0;
+
+	try {
+		await new Promise((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				reject(new Error('Expected 3 animation frames, received ' + frames + '.'));
+			}, 1000);
+
+			const tick = () => {
+				frames++;
+				if (frames >= 3) {
+					clearTimeout(timeout);
+					resolve();
+					return;
+				}
+
+				doc.requestAnimationFrame(tick);
+			};
+
+			doc.requestAnimationFrame(tick);
+		});
+	} finally {
+		doc.destroy();
+	}
+
+	return { frames };
+};
+
 const probe = JSON.parse(process.env.NODE_3D_GLFW_PROBE);
 let glfw = null;
 let window = null;
@@ -201,6 +239,12 @@ try {
 				keyEvent: readNormalizedKeyEvent(wrappedWindow, glfw),
 			},
 		});
+	} else if (probe.mode === 'document-raf') {
+		const mod = await import(process.env.NODE_3D_GLFW_INDEX_URL);
+		writeReport({
+			ok: true,
+			details: await readLegacyDocumentAnimationFrames(mod, probe),
+		});
 	} else {
 		throw new Error('Unknown probe mode: ' + probe.mode);
 	}
@@ -250,6 +294,7 @@ const platformProbes = (): readonly TProbe[] => {
 	const probes: TProbe[] = [
 		{ name: 'raw/auto/default', mode: 'raw-auto' },
 		{ name: 'window/auto/default', mode: 'window-auto' },
+		{ name: 'document/raf/paced', mode: 'document-raf' },
 	];
 
 	return probes;

@@ -629,6 +629,7 @@ DBG_EXPORT JS_METHOD(setWindowAttrib) {
 DBG_EXPORT JS_METHOD(drawWindow) {
 	NAPI_ENV;
 	THIS_WINDOW;
+	THIS_STATE;
 	REQ_FUN_ARG(1, cb);
 
 	if (!shouldRenderFrame(window)) {
@@ -640,6 +641,10 @@ DBG_EXPORT JS_METHOD(drawWindow) {
 	double timestamp = getFrameTimestamp(window);
 	napi_value args[1] = { JS_NUM(timestamp) };
 	cb.Call(1, args);
+
+	if ((state && state->window != window) || glfwWindowShouldClose(window)) {
+		RET_GLFW_VOID;
+	}
 
 	glfwSwapBuffers(window);
 
