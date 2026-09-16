@@ -24,7 +24,6 @@ const animate = () => {
 		w2.getKey(glfw.KEY_ESCAPE)
 	) {
 		process.exit(0);
-		return;
 	}
 
 	draw();

@@ -20,12 +20,23 @@ import type {
 	TNativeEmitter,
 	TWindowHandle,
 	TWindowMode,
+	TPosEvent,
+	TSizeEvent,
 } from './types.ts';
 
 // oxlint-disable max-lines
 
 export type TAnimationFrameCallback = (timestamp: number) => void;
 export type TSwapIntervalValue = Exclude<TSwapInterval, boolean>;
+
+/** Mutable native event shape before legacy fields are exposed to consumers. */
+type TKeyEventForNormalization = TEvent & {
+	code: string | null;
+	key: string | null;
+	keyCode: number;
+	which: number;
+	charCode: number;
+};
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -101,10 +112,14 @@ export class GlfwWindow extends EventEmitter {
 
 		this._readOptions(opts);
 		this._applyWindowHints();
-		this._emitter = { emit: (t, e) => this.emit(t, e as TEvent) };
+		this._emitter = {
+			emit: (t, e): void => {
+				this.emit(t, e as TEvent);
+			},
+		};
 
 		// This CREATES window, as mode switches from `undefined`
-		this.mode = opts.mode || 'windowed';
+		this.mode = opts.mode ?? 'windowed';
 
 		this._syncFramebufferRatio();
 		this._applyInitialAppearance(opts);
@@ -208,6 +223,7 @@ export class GlfwWindow extends EventEmitter {
 		return this._mode ?? 'windowed';
 	}
 
+	// oxlint-disable-next-line max-statements complexity
 	public set mode(v: TWindowMode) {
 		if (this._mode === v) {
 			return;
@@ -218,6 +234,8 @@ export class GlfwWindow extends EventEmitter {
 		const prevMode = this._mode;
 		this._mode = v;
 
+		// Upon the first entry to this setter - in constructor, there is no window.
+		// oxlint-disable-next-line typescript/no-unnecessary-condition
 		if (this._window) {
 			// Fullscreen can't be hidden (uh-oh)
 			if (prevMode === 'fullscreen') {
@@ -235,11 +253,11 @@ export class GlfwWindow extends EventEmitter {
 		this._display = currentMonitor ? this._monitors.indexOf(currentMonitor) : 0;
 
 		if (this._mode === 'windowed') {
-			this._x = this._prevX || this._x;
-			this._y = this._prevY || this._y;
-			this._width = this._prevWidth || this._width;
-			this._height = this._prevHeight || this._height;
-			this._decorated = this._prevDecorated || this._decorated;
+			this._x = this._prevX ?? this._x;
+			this._y = this._prevY ?? this._y;
+			this._width = this._prevWidth ?? this._width;
+			this._height = this._prevHeight ?? this._height;
+			this._decorated = this._prevDecorated ?? this._decorated;
 			this._prevX = null;
 			this._prevY = null;
 			this._prevWidth = null;
@@ -274,8 +292,10 @@ export class GlfwWindow extends EventEmitter {
 			}
 		} else if (this._mode === 'borderless') {
 			const monitor = this._monitors[this._display];
-			glfw.setWindowPos(this._window, monitor.pos_x, monitor.pos_y);
-			glfw.setWindowSize(this._window, monitor.width, monitor.height);
+			if (monitor) {
+				glfw.setWindowPos(this._window, monitor.pos_x, monitor.pos_y);
+				glfw.setWindowSize(this._window, monitor.width, monitor.height);
+			}
 		}
 
 		this.makeCurrent();
@@ -403,6 +423,7 @@ export class GlfwWindow extends EventEmitter {
 	}
 
 	/** Alias for `.on('keydown', callback)`. Setter adds a callback. */
+	// oxlint-disable-next-line typescript/related-getter-setter-pairs
 	public get onkeydown(): TCbField<TKeyEvent> {
 		return this.listeners('keydown') as TEventCb<TKeyEvent>[];
 	}
@@ -411,6 +432,7 @@ export class GlfwWindow extends EventEmitter {
 	}
 
 	/** Alias for `.on('keyup', callback)`. Setter adds a callback. */
+	// oxlint-disable-next-line typescript/related-getter-setter-pairs
 	public get onkeyup(): TCbField<TKeyEvent> {
 		return this.listeners('keyup') as TEventCb<TKeyEvent>[];
 	}
@@ -419,6 +441,7 @@ export class GlfwWindow extends EventEmitter {
 	}
 
 	/** Alias for `.on('mousedown', callback)`. Setter adds a callback. */
+	// oxlint-disable-next-line typescript/related-getter-setter-pairs
 	public get onmousedown(): TCbField<TMouseButtonEvent> {
 		return this.listeners('mousedown') as TEventCb<TMouseButtonEvent>[];
 	}
@@ -427,6 +450,7 @@ export class GlfwWindow extends EventEmitter {
 	}
 
 	/** Alias for `.on('mouseup', callback)`. Setter adds a callback. */
+	// oxlint-disable-next-line typescript/related-getter-setter-pairs
 	public get onmouseup(): TCbField<TMouseButtonEvent> {
 		return this.listeners('mouseup') as TEventCb<TMouseButtonEvent>[];
 	}
@@ -435,6 +459,7 @@ export class GlfwWindow extends EventEmitter {
 	}
 
 	/** Alias for `.on('wheel', callback)`. Setter adds a callback. */
+	// oxlint-disable-next-line typescript/related-getter-setter-pairs
 	public get onwheel(): TCbField<TMouseScrollEvent> {
 		return this.listeners('wheel') as TEventCb<TMouseScrollEvent>[];
 	}
@@ -443,6 +468,7 @@ export class GlfwWindow extends EventEmitter {
 	}
 
 	/** Alias for `.on('mousewheel', callback)`. Setter adds a callback. */
+	// oxlint-disable-next-line typescript/related-getter-setter-pairs
 	public get onmousewheel(): TCbField<TMouseScrollEvent> {
 		return this.listeners('mousewheel') as TEventCb<TMouseScrollEvent>[];
 	}
@@ -451,6 +477,7 @@ export class GlfwWindow extends EventEmitter {
 	}
 
 	/** Alias for `.on('resize', callback)`. Setter adds a callback. */
+	// oxlint-disable-next-line typescript/related-getter-setter-pairs
 	public get onresize(): TCbField<TEvent & TSize> {
 		return this.listeners('resize') as TEventCb<TEvent & TSize>[];
 	}
@@ -627,6 +654,8 @@ export class GlfwWindow extends EventEmitter {
 
 	/** Get a monitor having the most overlap with this window. */
 	public getCurrentMonitor(): TMonitor | null {
+		// First time it is used before any window is constructed (in mode setter)
+		// oxlint-disable-next-line typescript/no-unnecessary-condition
 		if (!this._window) {
 			return this._primaryDisplay;
 		}
@@ -739,13 +768,13 @@ export class GlfwWindow extends EventEmitter {
 		glfw.showWindow(this._window);
 	}
 
-	public emit(type: string, event: TEvent): boolean {
+	public override emit(type: string, event: TEvent): boolean {
 		if (type === 'keydown' || type === 'keyup') {
-			const keyEvent = event as TKeyEvent;
+			const keyEvent = event as unknown as TKeyEventForNormalization;
 			const glfwCode = keyEvent.which;
 
-			keyEvent.which = extraCodes[glfwCode] || glfwCode;
-			event.keyCode = keyEvent.which;
+			keyEvent.which = extraCodes[glfwCode] ?? glfwCode;
+			keyEvent.keyCode = keyEvent.which;
 			keyEvent.key =
 				(keyEvent.charCode && String.fromCodePoint(keyEvent.charCode)) ||
 				keyEvent.code ||
@@ -879,7 +908,7 @@ export class GlfwWindow extends EventEmitter {
 	private _resizable: boolean = true;
 
 	// Event bridge passed into the native GLFW addon.
-	private _emitter: TNativeEmitter;
+	private readonly _emitter: TNativeEmitter;
 
 	// Current native GLFW window handle.
 	private _window!: TWindowHandle; // assigned in constructor during `this.mode = x`
@@ -892,18 +921,18 @@ export class GlfwWindow extends EventEmitter {
 
 	// Initialize cached fields from constructor options before creating a GLFW window.
 	private _readOptions(opts: TWindowOpts): void {
-		this._major = opts.major === undefined ? 2 : opts.major;
-		this._minor = opts.minor === undefined ? 1 : opts.minor;
+		this._major = opts.major ?? 2;
+		this._minor = opts.minor ?? 1;
 
-		this._width = opts.width || 1280;
+		this._width = opts.width ?? 1280;
 		this._pxWidth = this._width;
-		this._height = opts.height || 720;
+		this._height = opts.height ?? 720;
 		this._pxHeight = this._height;
 
 		this._onBeforeWindow = opts.onBeforeWindow;
 		this._display = opts.display ?? 0;
 		this._monitors = glfw.getMonitors();
-		this._primaryDisplay = this._monitors.find((d) => d.is_primary) || null;
+		this._primaryDisplay = this._monitors.find((d) => d.is_primary) ?? null;
 
 		this._vsync = toSwapInterval(opts.swapInterval ?? opts.vsync);
 		this._autoIconify = opts.autoIconify !== false;
@@ -912,7 +941,7 @@ export class GlfwWindow extends EventEmitter {
 			this._decorated = opts.decorated;
 		}
 
-		this._msaa = opts.msaa || 0;
+		this._msaa = opts.msaa ?? 0;
 
 		this._resizable = opts.resizable !== false;
 	}
@@ -965,17 +994,17 @@ export class GlfwWindow extends EventEmitter {
 
 	// Keep cached position and size fields aligned with native events.
 	private _bindStateEvents(): void {
-		this.on('window_pos', ({ x, y }) => {
+		this.on('window_pos', ({ x, y }: TPosEvent) => {
 			this._x = x;
 			this._y = y;
 		});
 
-		this.on('wresize', ({ width, height }) => {
+		this.on('wresize', ({ width, height }: TSizeEvent) => {
 			this._width = width;
 			this._height = height;
 		});
 
-		this.on('resize', ({ width, height }) => {
+		this.on('resize', ({ width, height }: TSizeEvent) => {
 			this._pxWidth = width;
 			this._pxHeight = height;
 		});
@@ -990,12 +1019,7 @@ export class GlfwWindow extends EventEmitter {
 				this._onBeforeWindow(this, glfw);
 			}
 
-			this._window = glfw.createWindow(
-				this._width,
-				this._height,
-				this._emitter,
-				this._title ?? undefined,
-			);
+			this._window = glfw.createWindow(this._width, this._height, this._emitter, this._title);
 		} else if (this._mode === 'borderless') {
 			this._prevDecorated = this._decorated;
 			this._decorated = false;
@@ -1006,12 +1030,7 @@ export class GlfwWindow extends EventEmitter {
 				this._onBeforeWindow(this, glfw);
 			}
 
-			this._window = glfw.createWindow(
-				this._width,
-				this._height,
-				this._emitter,
-				this._title ?? undefined,
-			);
+			this._window = glfw.createWindow(this._width, this._height, this._emitter, this._title);
 		} else if (this._mode === 'fullscreen') {
 			this._adjustFullscreen();
 
@@ -1023,15 +1042,11 @@ export class GlfwWindow extends EventEmitter {
 				this._width,
 				this._height,
 				this._emitter,
-				this._title ?? undefined,
+				this._title,
 				this._display,
 			);
 		} else {
 			throw new Error(`Not supported display mode: '${this._mode}'.`);
-		}
-
-		if (!this._window) {
-			throw new Error('Failed to open a new GLFW Window');
 		}
 	}
 
@@ -1048,23 +1063,37 @@ export class GlfwWindow extends EventEmitter {
 	// Keep monitor modes with the nearest area to the current logical window size.
 	private _sortByAreaDiff(modes: readonly TMonitorMode[]): readonly TMonitorMode[] {
 		const sorted = modes.toSorted((a, b) => this._areaDiff(a) - this._areaDiff(b));
-		const best = this._areaDiff(sorted[0]);
+
+		const bestMonitor = sorted[0];
+		if (!bestMonitor) {
+			throw new Error('List of monitors is not available.');
+		}
+
+		const best = this._areaDiff(bestMonitor);
 		return sorted.filter((mode) => this._areaDiff(mode) === best);
 	}
 
 	// Sort monitor modes by nearest area to the current logical window size.
-	private _sortByRate(modes: readonly TMonitorMode[]): readonly TMonitorMode[] {
-		return modes.toSorted((a, b) => this._areaDiff(a) - this._areaDiff(b));
-	}
+	// private _sortByRate(modes: readonly TMonitorMode[]): readonly TMonitorMode[] {
+	// 	return modes.toSorted((a, b) => this._areaDiff(a) - this._areaDiff(b));
+	// }
 
 	// Choose the fullscreen monitor mode and apply its refresh rate hint.
 	private _adjustFullscreen(): void {
 		const mode = (() => {
-			const modes = this._monitors[this._display].modes;
+			const monitor = this._monitors[this._display];
+			if (!monitor) {
+				throw new Error('Could not fetch the current monitor.');
+			}
+			const modes = monitor.modes;
 			const exact = modes.filter((mode) => this._sizeEqual(mode));
 			const chosen = exact.length > 0 ? exact : this._sortByAreaDiff(modes);
 			return chosen.toSorted((a, b) => b.rate - a.rate)[0];
 		})();
+
+		if (!mode) {
+			throw new Error('No available display modes.');
+		}
 
 		this._width = mode.width;
 		this._height = mode.height;

@@ -47,7 +47,7 @@ export class Window extends GlfwWindow {
 		this._cancelAnimationFrameLoop = cancelLoop;
 	}
 
-	private _runAnimationFrameCallbacks = (timestamp: number): void => {
+	private readonly _runAnimationFrameCallbacks = (timestamp: number): void => {
 		const callbacks = this._animationFrameCallbacks;
 		this._animationFrameCallbacks = new Map();
 

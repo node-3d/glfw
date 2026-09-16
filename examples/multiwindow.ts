@@ -1,5 +1,6 @@
 import { GlfwWindow, glfw } from '@node-3d/glfw';
 import { setIdleLoop } from '@node-3d/uv-loop';
+import type { TMouseMoveEvent } from '../ts';
 
 const windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
 	const w = new GlfwWindow({
@@ -17,8 +18,13 @@ const windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
 
 // testing events
 for (let i = 0; i < windows.length; i++) {
-	const { w } = windows[i];
-	w.on('mousemove', (e) => console.log(`[#${i + 1} mousemove] ${e.x}, ${e.y}`));
+	const wnd = windows[i];
+	if (!wnd) {
+		continue;
+	}
+	wnd.w.on('mousemove', (e: TMouseMoveEvent) =>
+		console.log(`[#${i + 1} mousemove] ${e.x}, ${e.y}`),
+	);
 }
 
 let prevTime = Date.now();
@@ -30,7 +36,6 @@ const loopFunc = () => {
 		const { w, render } = window;
 		if (w.shouldClose || w.getKey(glfw.KEY_ESCAPE)) {
 			process.exit(0);
-			return;
 		}
 		w.drawWindow(render);
 	}

@@ -1,9 +1,9 @@
 import { getLogger } from '@node-3d/addon-tools';
-import { emptyFunction, ESC_KEY, F_KEY } from './constants.ts';
+import { emptyFunction } from './constants.ts';
 import { FakeImage } from './fake-image.ts';
 import { glfw } from './core.ts';
 import { Window } from './legacy-window.ts';
-import type { TCbVoid, TSize, TWebgl } from './types.ts';
+import type { TCbVoid, TKeyEvent, TMouseButtonEvent, TMouseMoveEvent, TSize, TWebgl } from './types.ts';
 
 const logger = getLogger('glfw');
 
@@ -115,13 +115,13 @@ export class Document extends Window {
 			Document.webgl.canvas = this;
 		}
 
-		this.on('mousedown', (e) => {
+		this.on('mousedown', (e: TMouseButtonEvent) => {
 			this.emit('pointerdown', e);
 		});
-		this.on('mouseup', (e) => {
+		this.on('mouseup', (e: TMouseButtonEvent) => {
 			this.emit('pointerup', e);
 		});
-		this.on('mousemove', (e) => {
+		this.on('mousemove', (e: TMouseMoveEvent) => {
 			this.emit('pointermove', e);
 		});
 
@@ -134,17 +134,21 @@ export class Document extends Window {
 			this.on('quit', () => Window.exit());
 
 			if (opts.autoEsc) {
-				this.on('keydown', (e) => e.keyCode === ESC_KEY && Window.exit());
+				this.on('keydown', (e: TKeyEvent) => {
+					if (e.key === 'Escape') {
+						Window.exit();
+					}
+				});
 			}
 		}
 
 		if (opts.autoFullscreen) {
-			this.on('keydown', (e) => {
-				if (e.keyCode === F_KEY && e.ctrlKey && e.shiftKey) {
+			this.on('keydown', (e: TKeyEvent) => {
+				if (e.code === 'KeyF' && e.ctrlKey && e.shiftKey) {
 					this.mode = 'windowed';
-				} else if (e.keyCode === F_KEY && e.ctrlKey && e.altKey) {
+				} else if (e.code === 'KeyF' && e.ctrlKey && e.altKey) {
 					this.mode = 'fullscreen';
-				} else if (e.keyCode === F_KEY && e.ctrlKey) {
+				} else if (e.code === 'KeyF' && e.ctrlKey) {
 					this.mode = 'borderless';
 				}
 			});
@@ -161,7 +165,7 @@ export class Document extends Window {
 		this.setInputMode(glfw.CURSOR, glfw.CURSOR_NORMAL);
 	};
 
-	public makeCurrent(): void {
+	public override makeCurrent(): void {
 		if (Document.webgl) {
 			Document.webgl.canvas = this;
 		}

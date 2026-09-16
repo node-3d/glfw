@@ -1,5 +1,6 @@
 import { GlfwWindow, glfw } from '@node-3d/glfw';
 import type { TWindowMode } from '@node-3d/glfw';
+import type { TKeyEvent } from '../ts';
 
 let mode: TWindowMode = 'windowed';
 
@@ -13,12 +14,12 @@ const w1 = new GlfwWindow({ title: 'GLFW Modes', mode, vsync: true });
 
 w1.on('resize', ({ width, height }) => console.log('Resized to', width, 'x', height));
 
-w1.on('keydown', (e) => {
-	if (e.keyCode === glfw.KEY_F && e.ctrlKey && e.shiftKey) {
+w1.on('keydown', (e: TKeyEvent) => {
+	if (e.code === 'KeyF' && e.ctrlKey && e.shiftKey) {
 		w1.mode = 'windowed';
-	} else if (e.keyCode === glfw.KEY_F && e.ctrlKey && e.altKey) {
+	} else if (e.code === 'KeyF' && e.ctrlKey && e.altKey) {
 		w1.mode = 'fullscreen';
-	} else if (e.keyCode === glfw.KEY_F && e.ctrlKey) {
+	} else if (e.code === 'KeyF' && e.ctrlKey) {
 		w1.mode = 'borderless';
 	}
 });
@@ -26,7 +27,6 @@ w1.on('keydown', (e) => {
 w1.loop(() => {
 	if (w1.shouldClose || w1.getKey(glfw.KEY_ESCAPE)) {
 		process.exit(0);
-		return;
 	}
 
 	glfw.testScene(w1.width, w1.height);

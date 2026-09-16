@@ -1,7 +1,7 @@
 {
 	"author": "Luis Blanco <luisblanco1337@gmail.com>",
 	"name": "@node-3d/glfw",
-	"version": "7.3.1",
+	"version": "7.3.2",
 	"description": "GLFW for Node.js",
 	"license": "MIT",
 	"main": "dist/index.js",
@@ -25,8 +25,8 @@
 		"tsconfig.json"
 	],
 	"engines": {
-		"node": ">=24.13.0",
-		"npm": ">=11.6.2"
+		"node": ">=22.18.0",
+		"npm": ">=10.9.0"
 	},
 	"scripts": {
 		"postinstall": "node install.js",
@@ -57,12 +57,13 @@
 		"@node-3d/uv-loop": "~0.1.0"
 	},
 	"devDependencies": {
-		"@rslib/core": "0.23.2",
+		"@rslib/core": "1.0.0",
 		"@types/node": "24.13.2",
-		"node-addon-api": "8.9.0",
-		"oxlint": "1.72.0",
+		"node-addon-api": "8.9.2",
+		"oxlint": "1.81.0",
+		"oxlint-tsgolint": "7.0.2001",
 		"tslib": "2.8.1",
-		"oxfmt": "0.57.0",
+		"oxfmt": "0.66.0",
 		"typescript": "7.0.2",
 		"clang-format-node": "3.0.7"
 	},

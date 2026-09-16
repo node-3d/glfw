@@ -142,7 +142,11 @@ export type TKeyEvent = TEvent & {
 	shiftKey: boolean;
 	code: string | null;
 	key: string | null;
+	/** @deprecated Use `code` for physical-key input or `key` for the logical key. */
+	keyCode: number;
+	/** @deprecated Use `code` for physical-key input or `key` for the logical key. */
 	which: number;
+	/** @deprecated Use `key` for character input. */
 	charCode: number;
 };
 
@@ -163,7 +167,8 @@ export type TPosEvent = TEvent & TPos;
 
 export type TSizeEvent = TEvent & TSize;
 
-export type TEventCb<T extends TEvent> = (event: T) => undefined | boolean;
+/** Event listener return values are ignored, matching Node's EventEmitter behavior. */
+export type TEventCb<T extends TEvent> = (event: T) => void;
 
 export type TCbField<T extends TEvent> = TEventCb<T> | readonly TEventCb<T>[];
 

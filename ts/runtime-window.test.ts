@@ -342,8 +342,8 @@ const runProbe = (probe: TProbe): string | null => {
 			NODE_3D_GLFW_NATIVE_URL: new URL('native.ts', import.meta.url).href,
 		},
 	});
-	const stdout = child.stdout || '';
-	const stderr = child.stderr || '';
+	const stdout = child.stdout ?? '';
+	const stderr = child.stderr ?? '';
 	const report = readReport(stdout);
 
 	if (child.status === 0 && report?.ok) {
@@ -357,7 +357,7 @@ const runProbe = (probe: TProbe): string | null => {
 	}
 
 	const glfwErrors = extractGlfwErrors(`${stdout}\n${stderr}`);
-	const reason = report?.error || exitText(child);
+	const reason = report?.error ?? exitText(child);
 	const glfwText = glfwErrors.length > 0 ? `; ${glfwErrors.join(' | ')}` : '';
 	return `${probe.name}: ${reason}${glfwText}`;
 };

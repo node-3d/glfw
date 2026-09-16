@@ -525,7 +525,7 @@ type TNativeMethods = {
 type TNative = TNativeMethods & Record<TGlfwConstant, number>;
 
 const loadAddon = createRequire(import.meta.url);
-const loaded = loadAddon(`../${getBin()}/glfw.node`);
+const loaded = loadAddon(`../${getBin()}/glfw.node`) as unknown;
 
 /**
  * Raw GLFW native bindings.
