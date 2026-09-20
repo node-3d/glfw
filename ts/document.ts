@@ -3,7 +3,14 @@ import { emptyFunction } from './constants.ts';
 import { FakeImage } from './fake-image.ts';
 import { glfw } from './core.ts';
 import { Window } from './legacy-window.ts';
-import type { TCbVoid, TKeyEvent, TMouseButtonEvent, TMouseMoveEvent, TSize, TWebgl } from './types.ts';
+import type {
+	TCbVoid,
+	TKeyEvent,
+	TMouseButtonEvent,
+	TMouseMoveEvent,
+	TSize,
+	TWebgl,
+} from './types.ts';
 
 const logger = getLogger('glfw');
 
