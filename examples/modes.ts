@@ -1,6 +1,5 @@
 import { GlfwWindow, glfw } from '@node-3d/glfw';
-import type { TWindowMode } from '@node-3d/glfw';
-import type { TKeyEvent } from '../ts';
+import type { TWindowMode, TKeyEvent } from '@node-3d/glfw';
 
 let mode: TWindowMode = 'windowed';
 
