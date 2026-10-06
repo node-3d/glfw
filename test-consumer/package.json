@@ -1,0 +1,8 @@
+{
+	"name": "glfw-consumer-test",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test": "node --test \"*.test.ts\""
+	}
+}
